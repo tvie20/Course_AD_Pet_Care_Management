@@ -136,10 +136,10 @@ export default function CustomerDashboard() {
             <CardTitle>Thú cưng của bạn</CardTitle>
             <CardDescription>Quản lý hồ sơ thú cưng</CardDescription>
           </div>
-          <Button variant="outline" size="sm" asChild className="gap-2 bg-transparent">
-            <Link href="/customer/pets/new">
-              <Plus className="w-4 h-4" />
-              Thêm thú cưng
+          <Button variant="ghost" size="sm" asChild className="gap-2 bg-transparent">
+            <Link href="/customer/pets">
+              Xem tất cả
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </Button>
         </CardHeader>
