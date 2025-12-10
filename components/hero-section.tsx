@@ -4,7 +4,7 @@ import { Calendar, UserPlus } from "lucide-react"
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 to-background py-20 lg:py-32">
+    <section className="relative overflow-hidden bg-linear-to-b from-primary/5 to-background py-20 lg:py-32">
       <div className="container px-4 mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
