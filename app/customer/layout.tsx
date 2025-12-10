@@ -38,7 +38,7 @@ const sidebarItems = [
   { icon: LayoutDashboard, label: "Tổng quan", href: "/customer" },
   { icon: ShoppingBag, label: "Mua sắm", href: "/customer/shop" },
   { icon: Cat, label: "Hồ sơ thú cưng", href: "/customer/pets" },
-  { icon: Calendar, label: "Đặt lịch hẹn", href: "/customer/appointments/new" },
+  { icon: Calendar, label: "Đặt lịch hẹn", href: "/customer/appointments" },
   { icon: History, label: "Lịch sử khám & tiêm", href: "/customer/history" },
   { icon: Receipt, label: "Lịch sử mua hàng", href: "/customer/invoices" },
   { icon: Syringe, label: "Gói tiêm & nhắc lịch", href: "/customer/vaccinations" },

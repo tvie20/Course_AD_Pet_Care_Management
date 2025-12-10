@@ -179,7 +179,7 @@ export default function CustomerDashboard() {
             <CardDescription>Các cuộc hẹn đã đặt</CardDescription>
           </div>
           <Button variant="ghost" size="sm" asChild className="gap-1">
-            <Link href="/customer/appointments/new">
+            <Link href="/customer/appointments">
               Xem tất cả
               <ArrowRight className="w-4 h-4" />
             </Link>
