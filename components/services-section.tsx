@@ -55,10 +55,6 @@ export function ServicesSection() {
                   asChild
                   className="gap-2 p-0 h-auto font-semibold text-primary hover:text-primary/80"
                 >
-                  <Link href={service.href}>
-                    Xem chi tiết
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
                 </Button>
               </CardContent>
             </Card>
