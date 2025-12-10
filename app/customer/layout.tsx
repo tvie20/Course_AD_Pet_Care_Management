@@ -27,15 +27,16 @@ import {
   Syringe,
   Star,
   User,
-  Bell,
   Menu,
   LogOut,
   ChevronDown,
+  ShoppingBag,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Tổng quan", href: "/customer" },
+  { icon: ShoppingBag, label: "Mua sắm", href: "/customer/shop" },
   { icon: Cat, label: "Hồ sơ thú cưng", href: "/customer/pets" },
   { icon: Calendar, label: "Đặt lịch hẹn", href: "/customer/appointments/new" },
   { icon: History, label: "Lịch sử khám & tiêm", href: "/customer/history" },
@@ -113,10 +114,6 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-            </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
