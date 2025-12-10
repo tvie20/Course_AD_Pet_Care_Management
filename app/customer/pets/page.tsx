@@ -56,7 +56,7 @@ export default function PetsPage() {
           <h1 className="text-2xl font-bold">Hồ sơ thú cưng</h1>
           <p className="text-muted-foreground">Quản lý thông tin thú cưng của bạn</p>
         </div>
-        <Button asChild className="gap-2">
+        <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700">
           <Link href="/customer/pets/new">
             <Plus className="w-4 h-4" />
             Thêm thú cưng
