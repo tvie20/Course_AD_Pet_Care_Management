@@ -243,19 +243,9 @@ function ReviewCard({ review }: { review: any }) {
                       <MessageSquare className="w-4 h-4" />
                       Bình luận của bạn:
                     </h4>
-                    <p className="text-foreground leading-relaxed italic bg-white p-3 border rounded-md text-sm">
-                        &quot;{review.comment}&quot;
+                    <p className="text-foreground leading-relaxed bg-white p-3 border rounded-md text-sm">
+                        {review.comment}
                     </p>
-                    
-                    {review.images.length > 0 && (
-                        <div className="flex gap-2 mt-3">
-                            {review.images.map((img: string, idx: number) => (
-                                <div key={idx} className="w-20 h-20 bg-muted rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
-                                    Ảnh {idx + 1}
-                                </div>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 {review.reply && (
