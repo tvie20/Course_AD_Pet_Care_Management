@@ -45,7 +45,7 @@ export default function LoginPage() {
               <TabsContent value="customer">
                 <form className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="customer-username">Tên đăng nhập / Email / SĐT</Label>
+                    <Label htmlFor="customer-username">Tên đăng nhập / Email / SĐT<span className="text-red-500">*</span></Label>
                     <Input
                       id="customer-username"
                       placeholder="Nhập tên đăng nhập"
@@ -54,7 +54,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customer-password">Mật khẩu</Label>
+                    <Label htmlFor="customer-password">Mật khẩu<span className="text-red-500">*</span></Label>
                     <Input
                       id="customer-password"
                       type="password"
@@ -95,7 +95,7 @@ export default function LoginPage() {
               <TabsContent value="staff">
                 <form className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="staff-id">Mã nhân viên / Tên đăng nhập</Label>
+                    <Label htmlFor="staff-id">Mã nhân viên / Tên đăng nhập<span className="text-red-500">*</span></Label>
                     <Input
                       id="staff-id"
                       placeholder="Nhập mã nhân viên"
@@ -104,7 +104,7 @@ export default function LoginPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="staff-password">Mật khẩu</Label>
+                    <Label htmlFor="staff-password">Mật khẩu<span className="text-red-500">*</span></Label>
                     <Input
                       id="staff-password"
                       type="password"

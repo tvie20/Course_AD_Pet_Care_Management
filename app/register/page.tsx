@@ -84,7 +84,7 @@ export default function RegisterPage() {
                 <h3 className="font-medium text-sm text-muted-foreground">Thông tin cá nhân</h3>
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Họ và tên *</Label>
+                    <Label htmlFor="fullName">Họ và tên <span className="text-red-500">*</span></Label>
                     <Input
                       id="fullName"
                       placeholder="Nguyễn Văn A"
@@ -95,7 +95,7 @@ export default function RegisterPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Số điện thoại *</Label>
+                      <Label htmlFor="phone">Số điện thoại <span className="text-red-500">*</span></Label>
                       <Input
                         id="phone"
                         type="tel"
@@ -106,7 +106,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                       <Input
                         id="email"
                         type="email"
@@ -119,7 +119,7 @@ export default function RegisterPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="cccd">CCCD (tuỳ chọn)</Label>
+                      <Label htmlFor="cccd">CCCD <span className="text-red-500">*</span></Label>
                       <Input
                         id="cccd"
                         placeholder="001234567890"
@@ -128,7 +128,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="birthday">Ngày sinh</Label>
+                      <Label htmlFor="birthday">Ngày sinh<span className="text-red-500">*</span></Label>
                       <Input
                         id="birthday"
                         type="date"
@@ -171,7 +171,7 @@ export default function RegisterPage() {
                 <h3 className="font-medium text-sm text-muted-foreground">Thông tin tài khoản</h3>
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Tên đăng nhập *</Label>
+                    <Label htmlFor="username">Tên đăng nhập <span className="text-red-500">*</span></Label>
                     <Input
                       id="username"
                       placeholder="username123"
@@ -182,7 +182,7 @@ export default function RegisterPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password">Mật khẩu *</Label>
+                      <Label htmlFor="password">Mật khẩu <span className="text-red-500">*</span></Label>
                       <Input
                         id="password"
                         type="password"
@@ -193,7 +193,7 @@ export default function RegisterPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu *</Label>
+                      <Label htmlFor="confirmPassword">Xác nhận mật khẩu <span className="text-red-500">*</span></Label>
                       <Input
                         id="confirmPassword"
                         type="password"
