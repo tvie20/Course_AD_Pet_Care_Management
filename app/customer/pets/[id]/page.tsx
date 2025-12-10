@@ -6,10 +6,6 @@ import {
   Printer, 
   Edit, 
   MoreVertical, 
-  Thermometer, 
-  Activity, 
-  Heart, 
-  Weight, 
   FileText,
   Syringe,
   Download,
@@ -25,10 +21,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" // Cần component Tabs
-import { Separator } from "@/components/ui/separator" // Cần component Separator (hoặc dùng hr)
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs" 
+import { Separator } from "@/components/ui/separator" 
 
-// Dữ liệu giả lập (Mock data) dựa trên ảnh bạn cung cấp
+// Dữ liệu giả lập (Mock data)
 const petDetail = {
   id: "PET250821001",
   name: "Chu",
@@ -38,7 +34,7 @@ const petDetail = {
   gender: "Cái",
   color: "Cam",
   weight: "3.6 kg",
-  avatar: "/cute-british-shorthair-cat-portrait.jpg", // Giả sử dùng lại ảnh
+  avatar: "/cute-british-shorthair-cat-portrait.jpg", 
   owner: {
     name: "Lâm Quỳnh Hương",
     regDate: "21-08-2025 10:34",
@@ -49,12 +45,6 @@ const petDetail = {
   currentVisit: {
     date: "21-08-2025 10:38",
     symptom: "Sốt cao, bỏ ăn 2 ngày nay.",
-    vitals: {
-      temp: "40 °C",
-      heartRate: "100 bpm",
-      spO2: "98 %",
-      bp: "120/75 mmHg"
-    }
   },
   history: [
     {
@@ -229,7 +219,7 @@ export default function PetDetailPage() {
         <div className="space-y-6 lg:col-span-2">
           
           {/* 1. Status Row */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid gap-6"> 
             {/* Symptoms */}
             <Card>
                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -240,57 +230,6 @@ export default function PetDetailPage() {
                   <Badge variant="secondary" className="mb-2">{petDetail.currentVisit.date}</Badge>
                   <p className="text-sm leading-relaxed">{petDetail.currentVisit.symptom}</p>
                </CardContent>
-            </Card>
-
-            {/* Vitals */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-base font-bold">Sinh hiệu</CardTitle>
-                  <Button variant="ghost" size="icon" className="h-8 w-8"><Edit className="w-4 h-4 text-muted-foreground"/></Button>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <Badge variant="secondary">{petDetail.currentVisit.date}</Badge>
-                </div>
-                <div className="grid grid-cols-2 gap-y-4 gap-x-8">
-                   <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
-                         <Weight className="w-4 h-4" />
-                      </div>
-                      <div>
-                         <p className="text-sm font-semibold">{petDetail.currentVisit.vitals.temp}</p> {/* Mock data swap weight for demo */}
-                         <p className="text-xs text-muted-foreground">{petDetail.weight}</p>
-                      </div>
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center">
-                         <Thermometer className="w-4 h-4" />
-                      </div>
-                      <div>
-                         <p className="text-sm font-semibold">{petDetail.currentVisit.vitals.temp}</p>
-                         <p className="text-xs text-muted-foreground">Thân nhiệt</p>
-                      </div>
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
-                         <Activity className="w-4 h-4" />
-                      </div>
-                      <div>
-                         <p className="text-sm font-semibold">{petDetail.currentVisit.vitals.spO2}</p>
-                         <p className="text-xs text-muted-foreground">SpO2</p>
-                      </div>
-                   </div>
-                   <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center">
-                         <Heart className="w-4 h-4" />
-                      </div>
-                      <div>
-                         <p className="text-sm font-semibold">{petDetail.currentVisit.vitals.heartRate}</p>
-                         <p className="text-xs text-muted-foreground">Nhịp tim</p>
-                      </div>
-                   </div>
-                </div>
-              </CardContent>
             </Card>
           </div>
 
