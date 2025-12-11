@@ -70,7 +70,7 @@ const reviews = [
     branch: "PetCareX Quận 1",
     date: "10/11/2025",
     ratings: {
-        quality: 5,   // 5 Sao
+        quality: 4,   // 5 Sao
         staff: 3,     // Bình thường
         overall: 4    // Hài lòng
     },
