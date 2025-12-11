@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { Trash2, Minus, Plus, ArrowLeft, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -31,18 +31,17 @@ export default function CartPage() {
     }
   }
 
-  // Logic xóa sản phẩm (cũng xóa khỏi danh sách đang chọn)
+  // Logic xóa sản phẩm
   const handleDelete = (id: number) => {
     removeFromCart(id)
     setSelectedItems(selectedItems.filter((itemId) => itemId !== id))
   }
 
-  // Tính tổng tiền tạm tính
+  // Tính tổng tiền
   const subtotal = items
     .filter((item) => selectedItems.includes(item.id))
     .reduce((sum, item) => sum + item.price * item.quantity, 0)
 
-  // Kiểm tra xem có đang chọn tất cả không
   const isAllSelected = items.length > 0 && selectedItems.length === items.length
 
   if (items.length === 0) {
@@ -74,18 +73,18 @@ export default function CartPage() {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Danh sách sản phẩm */}
         <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardContent className="p-4 flex items-center gap-4">
-              <Checkbox 
-                checked={isAllSelected}
-                onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
-                id="select-all"
-              />
-              <label htmlFor="select-all" className="font-medium cursor-pointer select-none">
-                Chọn tất cả ({items.length} sản phẩm)
-              </label>
-            </CardContent>
-          </Card>
+          
+          {/* Đã xóa Card bao quanh, chỉ giữ lại nội dung và thêm px-4 để căn lề thẳng với thẻ bên dưới */}
+          <div className="flex items-center gap-4 px-4 pb-2">
+            <Checkbox 
+              checked={isAllSelected}
+              onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+              id="select-all"
+            />
+            <label htmlFor="select-all" className="font-medium cursor-pointer select-none text-muted-foreground hover:text-foreground transition-colors">
+              Chọn tất cả ({items.length} sản phẩm)
+            </label>
+          </div>
 
           <div className="space-y-4">
             {items.map((item) => (
@@ -98,9 +97,8 @@ export default function CartPage() {
                     />
                   </div>
                   
-                  {/* Ảnh sản phẩm */}
+                  {/* Ảnh sản phẩm placeholder */}
                   <div className="w-24 h-24 bg-muted rounded-md flex-shrink-0 flex items-center justify-center text-xs text-muted-foreground">
-                    {/* <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> */}
                     Image
                   </div>
 
@@ -111,7 +109,7 @@ export default function CartPage() {
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 text-muted-foreground hover:text-red-500 -mt-1 -mr-2"
+                                className="h-8 w-8 text-muted-foreground hover:text-500 -mt-1 -mr-2"
                                 onClick={() => handleDelete(item.id)}
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -129,7 +127,7 @@ export default function CartPage() {
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 rounded-none"
+                                className="h-8 w-8 rounded-md"
                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                 disabled={item.quantity <= 1}
                             >
@@ -139,7 +137,7 @@ export default function CartPage() {
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8 rounded-none"
+                                className="h-8 w-8 rounded-md"
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             >
                                 <Plus className="w-3 h-3" />
