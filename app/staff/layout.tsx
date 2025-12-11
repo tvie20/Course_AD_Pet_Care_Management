@@ -37,6 +37,7 @@ import {
   LogOut,
   User,
   ChevronDown,
+  MessageSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -60,9 +61,10 @@ const sidebarGroups = [
       { icon: Users, label: "Khách hàng", href: "/staff/customers" },
       { icon: Cat, label: "Thú cưng", href: "/staff/pets" },
       { icon: Package, label: "Dịch vụ & Gói tiêm", href: "/staff/services" },
-      { icon: Warehouse, label: "Kho & Nhập hàng", href: "/staff/inventory" },
       { icon: Receipt, label: "Hóa đơn", href: "/staff/invoices" },
+      { icon: Warehouse, label: "Kho & Nhập hàng", href: "/staff/inventory" },
       { icon: UserCog, label: "Nhân sự", href: "/staff/hr" },
+      { icon: MessageSquare, label: "Đánh giá & Phản hồi", href: "/staff/reviews" },
     ],
   },
   {
