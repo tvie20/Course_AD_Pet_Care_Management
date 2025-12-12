@@ -317,7 +317,7 @@ function ReviewItem({
                                 </div>
                                 <Textarea 
                                     placeholder="Nhập nội dung cảm ơn hoặc giải trình..." 
-                                    className="min-h-[80px] text-sm resize-none focus-visible:ring-primary"
+                                    className="min-h-20 text-sm resize-none focus-visible:ring-primary"
                                     value={replyText}
                                     onChange={(e) => setReplyText(e.target.value)}
                                 />

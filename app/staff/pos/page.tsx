@@ -1,317 +1,609 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useMemo } from "react"
+import { 
+  Plus, 
+  X, 
+  CreditCard, 
+  Banknote, 
+  QrCode,
+  Trash2,
+  Search,
+  User,
+  PawPrint
+} from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
-import { Search, Plus, Minus, Trash2, CreditCard, Banknote, QrCode, User, Cat } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const pendingServices = [
-  { id: 1, type: "service", name: "Khám bệnh - Mochi", price: 200000, pet: "Mochi" },
-  { id: 2, type: "service", name: "Tiêm phòng dại - Luna", price: 150000, pet: "Luna" },
-]
+// --- DỮ LIỆU GIẢ LẬP ---
 
-const products = [
-  { id: 1, name: "Thức ăn Royal Canin 2kg", price: 450000, stock: 25 },
-  { id: 2, name: "Vắc-xin 5 bệnh", price: 350000, stock: 50 },
-  { id: 3, name: "Thuốc giun Nexgard", price: 180000, stock: 100 },
-  { id: 4, name: "Shampoo trị nấm", price: 220000, stock: 30 },
-]
+type ItemType = "product" | "vaccine" | "service"
 
-interface CartItem {
+interface InventoryItem {
   id: number
-  type: "service" | "product"
+  code: string
+  type: ItemType
   name: string
   price: number
+  unit: string
+  stock?: number
+}
+
+interface CartItem extends InventoryItem {
   quantity: number
 }
 
-export default function POSPage() {
-  const [customerPhone, setCustomerPhone] = useState("")
-  const [customer, setCustomer] = useState<{ name: string; tier: string; points: number } | null>(null)
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [productSearch, setProductSearch] = useState("")
-  const [paymentMethod, setPaymentMethod] = useState("cash")
+interface Customer {
+  id: string
+  name: string
+  phone: string
+  pets: { id: string; name: string }[]
+}
 
-  const searchCustomer = () => {
-    if (customerPhone === "0901234567") {
-      setCustomer({ name: "Nguyễn Văn A", tier: "Thân thiết", points: 125 })
+// Cấu trúc dữ liệu cho MỘT hóa đơn
+interface InvoiceState {
+  id: string
+  cart: CartItem[]
+  customer: Customer | null
+  selectedPetId: string | null
+  discountInput: number
+  discountUnit: "vnd" | "percent"
+  cashAmount: number
+  transferAmount: number
+  note: string
+  internalNote: string
+}
+
+const inventory: InventoryItem[] = [
+  { id: 1, code: "SP001", type: "product", name: "Pate Whiskas vị Cá Ngừ", price: 13000, unit: "gói", stock: 100 },
+  { id: 2, code: "SP002", type: "product", name: "Thức ăn Royal Canin 2kg", price: 450000, unit: "bao", stock: 25 },
+  { id: 3, code: "SP003", type: "product", name: "Cát vệ sinh Ciao 5L", price: 65000, unit: "túi", stock: 50 },
+  { id: 4, code: "VX001", type: "vaccine", name: "Vắc-xin 4 bệnh Mèo (Purevax)", price: 350000, unit: "mũi", stock: 30 },
+  { id: 5, code: "VX002", type: "vaccine", name: "Vắc-xin Dại (Rabisin)", price: 50000, unit: "mũi", stock: 100 },
+  { id: 9, code: "VX003", type: "vaccine", name: "Vắc-xin 7 bệnh Chó (Recombitek)", price: 400000, unit: "mũi", stock: 40 },
+  { id: 6, code: "DV001", type: "service", name: "Tắm chó < 5kg", price: 280000, unit: "lần" },
+  { id: 7, code: "DV002", type: "service", name: "Cắt tỉa lông toàn thân", price: 350000, unit: "lần" },
+  { id: 8, code: "DV003", type: "service", name: "Khám lâm sàng", price: 100000, unit: "lần" },
+]
+  
+  // State khách hàng
+  const mockCustomer: Customer = {
+  id: "KH001",
+  name: "Hồ Nguyễn Nam Phương",
+  phone: "0336726684",
+  pets: [
+    { id: "P01", name: "Mochi (Poodle)" },
+    { id: "P02", name: "Lu (Corgi)" }
+  ]
+  }
+
+  export default function POSPage() {
+  // --- STATE QUẢN LÝ NHIỀU HÓA ĐƠN ---
+  // Mỗi phần tử trong mảng là một hóa đơn độc lập
+  const [invoices, setInvoices] = useState<InvoiceState[]>([
+    {
+      id: "HD243",
+      cart: [
+        { id: 6, code: "DV001", type: "service", name: "Tắm chó < 5kg", price: 280000, unit: "lần", quantity: 1 },
+        { id: 4, code: "VX001", type: "vaccine", name: "Vắc-xin 4 bệnh Mèo", price: 350000, unit: "mũi", stock: 30, quantity: 1 },
+        { id: 1, code: "SP001", type: "product", name: "Pate Whiskas vị Cá Ngừ", price: 13000, unit: "gói", stock: 100, quantity: 5 },
+      ],
+      customer: mockCustomer,
+      selectedPetId: "P01",
+      discountInput: 0,
+      discountUnit: "vnd",
+      cashAmount: 300000,
+      transferAmount: 0,
+      note: "",
+      internalNote: ""
+    }
+  ])
+  const [activeTabId, setActiveTabId] = useState<string>("HD243")
+
+// State UI cục bộ (Search & Filter)
+  const [itemTypeMode, setItemTypeMode] = useState<ItemType>("service")
+  const [searchQuery, setSearchQuery] = useState("")
+
+  // Lấy hóa đơn đang active
+  const currentInvoice = useMemo(() => 
+    invoices.find(inv => inv.id === activeTabId) || invoices[0], 
+  [invoices, activeTabId])
+
+  // Helper cập nhật hóa đơn hiện tại
+  const updateCurrentInvoice = (updates: Partial<InvoiceState>) => {
+    setInvoices(prev => prev.map(inv => 
+      inv.id === activeTabId ? { ...inv, ...updates } : inv
+    ))
+  }
+
+  // --- ACTIONS TRÊN HÓA ĐƠN ---
+
+  // 1. Tạo hóa đơn mới (Nút +)
+  const createNewInvoice = () => {
+    const newId = `HD${Math.floor(Math.random() * 1000) + 200}`
+    const newInvoice: InvoiceState = {
+      id: newId,
+      cart: [],
+      customer: null,
+      selectedPetId: null,
+      discountInput: 0,
+      discountUnit: "vnd",
+      cashAmount: 0,
+      transferAmount: 0,
+      note: "",
+      internalNote: ""
+    }
+    setInvoices([...invoices, newInvoice])
+    setActiveTabId(newId)
+  }
+
+  // 2. Đóng hóa đơn (Nút X trên tab hoặc sau khi thanh toán)
+  const closeInvoice = (idToDelete: string, e?: React.MouseEvent) => {
+    e?.stopPropagation() // Ngăn chặn sự kiện click tab
+    
+    // Không cho xóa nếu chỉ còn 1 tab -> Reset về rỗng
+    if (invoices.length === 1) {
+        updateCurrentInvoice({
+            cart: [], customer: null, selectedPetId: null, 
+            discountInput: 0, cashAmount: 0, transferAmount: 0, note: "", internalNote: ""
+        })
+        return;
+    }
+
+    const newInvoices = invoices.filter(inv => inv.id !== idToDelete)
+    setInvoices(newInvoices)
+    
+    // Nếu đóng tab đang active, chuyển sang tab liền trước
+    if (activeTabId === idToDelete) {
+        setActiveTabId(newInvoices[newInvoices.length - 1].id)
     }
   }
 
-  const addToCart = (item: { id: number; type: "service" | "product"; name: string; price: number }) => {
-    const existing = cart.find((c) => c.id === item.id && c.type === item.type)
+  // --- LOGIC GIỎ HÀNG ---
+  const addToCart = (item: InventoryItem) => {
+    const currentCart = currentInvoice.cart
+    const existing = currentCart.find(c => c.id === item.id)
+    
+    let newCart
     if (existing) {
-      setCart(cart.map((c) => (c.id === item.id && c.type === item.type ? { ...c, quantity: c.quantity + 1 } : c)))
+      newCart = currentCart.map(c => c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c)
     } else {
-      setCart([...cart, { ...item, quantity: 1 }])
+      newCart = [...currentCart, { ...item, quantity: 1 }]
     }
+    
+    updateCurrentInvoice({ cart: newCart })
+    setSearchQuery("")
   }
 
-  const updateQuantity = (id: number, type: string, delta: number) => {
-    setCart(
-      cart
-        .map((c) => (c.id === id && c.type === type ? { ...c, quantity: Math.max(0, c.quantity + delta) } : c))
-        .filter((c) => c.quantity > 0),
+  const updateQuantity = (id: number, val: string) => {
+    const qty = parseInt(val) || 0
+    const newCart = currentInvoice.cart.map(c => c.id === id ? { ...c, quantity: Math.max(1, qty) } : c)
+    updateCurrentInvoice({ cart: newCart })
+  }
+
+  const removeFromCart = (id: number) => {
+    const newCart = currentInvoice.cart.filter(c => c.id !== id)
+    updateCurrentInvoice({ cart: newCart })
+  }
+
+  // --- LOGIC TÍNH TOÁN ---
+
+  const filteredItems = useMemo(() => {
+    if (!searchQuery) return []
+    return inventory.filter(item => 
+      item.type === itemTypeMode && 
+      (item.name.toLowerCase().includes(searchQuery.toLowerCase()) || item.code.toLowerCase().includes(searchQuery.toLowerCase()))
     )
+  }, [searchQuery, itemTypeMode])
+
+  const totalAmount = currentInvoice.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  
+  const discountValue = currentInvoice.discountUnit === "vnd" 
+    ? currentInvoice.discountInput 
+    : (totalAmount * currentInvoice.discountInput) / 100
+
+  const finalTotal = Math.max(0, totalAmount - discountValue)
+  const totalPaid = (currentInvoice.cashAmount || 0) + (currentInvoice.transferAmount || 0)
+  const changeDue = totalPaid - finalTotal
+
+  // --- XỬ LÝ SỰ KIỆN NÚT BẤM ---
+
+  const handleSelectCustomer = () => {
+      // Giả lập chọn khách hàng từ Modal
+      updateCurrentInvoice({ 
+          customer: mockCustomer,
+          selectedPetId: mockCustomer.pets[0].id // Mặc định chọn pet đầu tiên
+      })
   }
 
-  const removeFromCart = (id: number, type: string) => {
-    setCart(cart.filter((c) => !(c.id === id && c.type === type)))
+  const handleSaveInvoice = () => {
+      // Logic: Gửi API lưu trạng thái 'UNPAID'
+      alert(`Đã chuyển hóa đơn ${currentInvoice.id} sang "Quản lý hóa đơn" (Trạng thái: Chưa thanh toán).`)
+      // KHÔNG đóng tab
   }
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const discount = customer?.tier === "VIP" ? subtotal * 0.1 : customer?.tier === "Thân thiết" ? subtotal * 0.05 : 0
-  const total = subtotal - discount
-  const pointsEarned = Math.floor(total / 50000)
-
-  const filteredProducts = products.filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()))
+  const handlePayment = () => {
+      // Logic: Gửi API lưu trạng thái 'PAID'
+      alert(`Thanh toán thành công ${currentInvoice.id}. Đã lưu vào "Quản lý hóa đơn" (Trạng thái: Đã thanh toán).`)
+      // Đóng tab hiện tại
+      closeInvoice(currentInvoice.id)
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Bán hàng & Thanh toán</h1>
-        <p className="text-muted-foreground">Tạo hóa đơn và thanh toán cho khách hàng</p>
+    <div className="flex flex-col h-[calc(100vh-80px)] space-y-4">
+      
+      {/* 1. TOP BAR: TABS */}
+      <div className="flex items-center justify-between bg-white p-2 rounded-t-lg border-b">
+        <div className="flex items-center gap-2 overflow-x-auto max-w-[80vw]">
+            <span className="font-bold text-lg mr-4 px-2 whitespace-nowrap">Bán hàng</span>
+            
+            <div className="flex gap-2">
+                {invoices.map(inv => (
+                    <div 
+                        key={inv.id}
+                        onClick={() => setActiveTabId(inv.id)}
+                        className={`
+                            cursor-pointer border h-9 px-4 rounded-md text-sm flex items-center gap-2 transition-colors relative group select-none
+                            ${activeTabId === inv.id 
+                                ? "bg-emerald-600 text-white border-emerald-600 font-medium" 
+                                : "bg-slate-50 text-slate-600 hover:bg-slate-100 border-slate-200"}
+                        `}
+                    >
+                        {inv.id}
+                        <div 
+                            onClick={(e) => closeInvoice(inv.id, e)}
+                            className={`rounded-full p-0.5 ${activeTabId === inv.id ? "hover:bg-emerald-500" : "hover:bg-slate-200"}`}
+                        >
+                            <X className="w-3 h-3 opacity-70 hover:opacity-100"/>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <Button onClick={createNewInvoice} variant="ghost" size="icon" className="h-9 w-9 rounded-full border border-dashed ml-2 shrink-0 hover:border-emerald-500 hover:text-emerald-600">
+                <Plus className="w-4 h-4" />
+            </Button>
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left Panel - Customer & Products */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Customer Search */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Thông tin khách hàng
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Nhập số điện thoại khách hàng"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                />
-                <Button onClick={searchCustomer}>Tìm</Button>
-              </div>
-              {customer && (
-                <div className="mt-4 p-4 rounded-lg bg-muted flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold">{customer.name}</p>
-                    <p className="text-sm text-muted-foreground">{customerPhone}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge>{customer.tier}</Badge>
-                    <p className="text-sm text-muted-foreground mt-1">{customer.points} điểm</p>
-                  </div>
+      {/* 2. MAIN LAYOUT */}
+      <div className="flex flex-col lg:flex-row gap-4 h-full">
+        
+        {/* --- LEFT: CART & PRODUCTS --- */}
+        <div className="flex-1 bg-white rounded-lg border shadow-sm flex flex-col min-h-0">
+            
+            {/* Header */}
+            <div className="p-4 border-b space-y-4 shrink-0">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-bold text-emerald-700">Chi tiết {currentInvoice.id}</h2>
+                    <div className="flex items-center gap-4 text-sm">
+                        <RadioGroup 
+                                defaultValue="service" 
+                                value={itemTypeMode}
+                                onValueChange={(v) => setItemTypeMode(v as ItemType)}
+                                className="flex items-center gap-4"
+                            >
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="product" id="r1" className="text-emerald-600 border-emerald-600" />
+                                    <Label htmlFor="r1" className="cursor-pointer">Sản phẩm</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="vaccine" id="r2" className="text-emerald-600 border-emerald-600" />
+                                    <Label htmlFor="r2" className="cursor-pointer">Vacxin</Label>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <RadioGroupItem value="service" id="r3" className="text-emerald-600 border-emerald-600" />
+                                    <Label htmlFor="r3" className="cursor-pointer font-medium">Dịch vụ</Label>
+                                </div>
+                        </RadioGroup>
+                    </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Pending Services */}
-          {customer && pendingServices.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Cat className="w-4 h-4" />
-                  Dịch vụ chưa thanh toán
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {pendingServices.map((service) => (
-                    <div key={service.id} className="flex items-center justify-between p-3 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              addToCart({ id: service.id, type: "service", name: service.name, price: service.price })
-                            } else {
-                              removeFromCart(service.id, "service")
-                            }
-                          }}
-                        />
-                        <div>
-                          <p className="font-medium text-sm">{service.name}</p>
+                {/* Search */}
+                <div className="relative">
+                    <Input 
+                        placeholder={`Tìm kiếm ${itemTypeMode === 'product' ? 'sản phẩm' : itemTypeMode === 'vaccine' ? 'vacxin' : 'dịch vụ'}...`} 
+                        className="pl-4 bg-slate-50 border-slate-200 focus-visible:ring-emerald-500"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery.length > 0 && filteredItems.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 bg-white border shadow-lg rounded-md mt-1 z-10 max-h-60 overflow-y-auto">
+                            {filteredItems.map(item => (
+                                <div key={item.id} className="p-2 hover:bg-emerald-50 cursor-pointer flex justify-between text-sm items-center border-b last:border-0" onClick={() => addToCart(item)}>
+                                    <div>
+                                        <div className="font-medium">{item.name}</div>
+                                        <div className="text-xs text-muted-foreground">Mã: {item.code} {item.stock ? `| Tồn: ${item.stock}` : ''}</div>
+                                    </div>
+                                    <div className="text-emerald-700 font-semibold">{item.price.toLocaleString()}</div>
+                                </div>
+                            ))}
                         </div>
-                      </div>
-                      <p className="font-semibold">{service.price.toLocaleString()}đ</p>
-                    </div>
-                  ))}
+                    )}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+            </div>
 
-          {/* Products */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Thêm sản phẩm</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Tìm sản phẩm theo tên hoặc mã..."
-                  value={productSearch}
-                  onChange={(e) => setProductSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() =>
-                      addToCart({ id: product.id, type: "product", name: product.name, price: product.price })
-                    }
-                  >
-                    <div>
-                      <p className="font-medium text-sm">{product.name}</p>
-                      <p className="text-xs text-muted-foreground">Tồn: {product.stock}</p>
+            {/* Table */}
+            <div className="flex-1 overflow-auto">
+                <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-muted-foreground uppercase bg-slate-50 sticky top-0 z-0">
+                        <tr>
+                            <th className="px-4 py-3 font-medium w-10">STT</th>
+                            {/* Cột mới: Mã SP */}
+                            <th className="px-4 py-3 font-medium w-24">Mã SP</th>
+                            {/* Đổi tên cột */}
+                            <th className="px-4 py-3 font-medium">Tên hàng</th>
+                            <th className="px-4 py-3 font-medium text-center w-20">SL</th>
+                            <th className="px-4 py-3 font-medium text-center w-20">ĐVT</th>
+                            <th className="px-4 py-3 font-medium text-right w-28">Đơn giá</th>
+                            <th className="px-4 py-3 font-medium text-right w-28">Thành tiền</th>
+                            <th className="px-4 py-3 w-10"></th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                        {currentInvoice.cart.map((item, index) => (
+                            <tr key={item.id} className="hover:bg-slate-50 group">
+                                <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
+                                <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{item.code}</td>
+                                <td className="px-4 py-3 font-medium">
+                                    {item.name}
+                                    {item.type === 'vaccine' && <Badge variant="secondary" className="ml-2 text-[10px] h-4 px-1">VX</Badge>}
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                    <Input 
+                                        type="number" 
+                                        className="h-8 w-16 text-center mx-auto focus-visible:ring-emerald-500 p-1" 
+                                        value={item.quantity} 
+                                        onChange={(e) => updateQuantity(item.id, e.target.value)}
+                                    />
+                                </td>
+                                <td className="px-4 py-3 text-center text-muted-foreground">{item.unit}</td>
+                                <td className="px-4 py-3 text-right">{item.price.toLocaleString()}</td>
+                                <td className="px-4 py-3 text-right font-medium">{(item.price * item.quantity).toLocaleString()}</td>
+                                <td className="px-4 py-3 text-center">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeFromCart(item.id)}>
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                        {currentInvoice.cart.length === 0 && (
+                            <tr>
+                                <td colSpan={8} className="text-center py-10 text-muted-foreground text-sm italic">
+                                    Chưa có sản phẩm nào trong hóa đơn này
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Footer: Totals */}
+            <div className="p-4 border-t bg-slate-50/50 space-y-2">
+                <div className="flex justify-end gap-12 text-sm">
+                    <span className="text-muted-foreground">Tổng cộng</span>
+                    <span className="font-medium w-32 text-right">{totalAmount.toLocaleString()}</span>
+                </div>
+                
+                <div className="flex justify-end gap-8 text-sm items-center">
+                    <span className="text-muted-foreground w-24 text-right">Giảm giá</span>
+                    <div className="flex items-center w-32 justify-end gap-2">
+                        <Select 
+                            value={currentInvoice.discountUnit} 
+                            onValueChange={(v) => updateCurrentInvoice({ discountUnit: v as "vnd" | "percent" })}
+                        >
+                            <SelectTrigger className="h-8 w-[65px] text-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="vnd">đ</SelectItem>
+                                <SelectItem value="percent">%</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {/* Xử lý số 0 hiện ẩn và bỏ nút tăng giảm */}
+                        <Input 
+                            className="h-8 text-right focus-visible:ring-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                            value={currentInvoice.discountInput === 0 ? '' : currentInvoice.discountInput} 
+                            placeholder="0"
+                            type="number"
+                            min={0}
+                            onChange={(e) => updateCurrentInvoice({ discountInput: Number(e.target.value) })}
+                        />
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-sm">{product.price.toLocaleString()}đ</p>
-                      <Button size="sm" variant="ghost" className="h-6 px-2">
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+
+                {currentInvoice.discountUnit === 'percent' && currentInvoice.discountInput > 0 && (
+                     <div className="flex justify-end gap-8 text-xs text-muted-foreground">
+                        <span className="italic w-32 text-right">(-{discountValue.toLocaleString()}đ)</span>
+                     </div>
+                )}
+
+                <Separator className="my-2"/>
+                <div className="flex justify-end gap-12 text-base">
+                    <span className="font-semibold text-slate-700">Số tiền thanh toán</span>
+                    <span className="font-bold w-32 text-right text-emerald-700">{finalTotal.toLocaleString()}</span>
+                </div>
+            </div>
         </div>
 
-        {/* Right Panel - Cart */}
-        <div>
-          <Card className="sticky top-20">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Giỏ hàng</CardTitle>
-              <CardDescription>{cart.length} sản phẩm/dịch vụ</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {cart.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-sm">Chưa có sản phẩm trong giỏ hàng</div>
-              ) : (
-                <>
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {cart.map((item) => (
-                      <div key={`${item.type}-${item.id}`} className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">{item.price.toLocaleString()}đ</p>
+        {/* --- RIGHT COLUMN --- */}
+        <div className="w-full lg:w-[380px] flex flex-col gap-4 shrink-0 overflow-y-auto">
+            
+            {/* 1. Customer Info */}
+            <Card className="shadow-sm border">
+                <CardContent className="p-4 space-y-4">
+                    <h3 className="font-bold text-emerald-800 flex items-center gap-2">
+                        <User className="w-4 h-4"/> Khách hàng
+                    </h3>
+                    
+                    <div className="space-y-3">
+                        {!currentInvoice.customer ? (
+                             <div className="flex gap-2">
+                                <Input placeholder="Tìm khách hàng (F4)" className="flex-1 focus-visible:ring-emerald-500"/>
+                                <Button onClick={handleSelectCustomer} variant="outline" size="icon" className="shrink-0 border-emerald-200 text-emerald-600 hover:bg-emerald-50">
+                                    <Search className="w-4 h-4"/>
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="bg-emerald-50/50 rounded-md border border-emerald-100 p-3 relative group">
+                                <div className="font-semibold text-emerald-900">{currentInvoice.customer.name}</div>
+                                <div className="text-sm text-emerald-700">{currentInvoice.customer.phone}</div>
+                                <Button 
+                                    variant="ghost" size="icon" 
+                                    className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 hover:text-red-600"
+                                    onClick={() => updateCurrentInvoice({ customer: null, selectedPetId: null })}
+                                >
+                                    <X className="w-4 h-4"/>
+                                </Button>
+                            </div>
+                        )}
+
+                        {/* Pet Selection (Chỉ hiện khi đã chọn Customer) */}
+                        {currentInvoice.customer && (
+                            <div className="space-y-1 animate-in fade-in slide-in-from-top-2">
+                                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                                    <PawPrint className="w-3 h-3"/> Thú cưng (Chọn 1)
+                                </Label>
+                                <Select 
+                                    value={currentInvoice.selectedPetId || ""} 
+                                    onValueChange={(v) => updateCurrentInvoice({ selectedPetId: v })}
+                                >
+                                    <SelectTrigger className="focus:ring-emerald-500">
+                                        <SelectValue placeholder="Chọn thú cưng" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {currentInvoice.customer.pets.map(pet => (
+                                            <SelectItem key={pet.id} value={pet.id}>{pet.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-1">
+                        <Label className="text-xs text-muted-foreground">Ghi chú hóa đơn</Label>
+                        <Textarea 
+                            className="min-h-[60px] resize-none focus-visible:ring-emerald-500 text-sm" 
+                            placeholder="Ghi chú in ra bill..."
+                            value={currentInvoice.note}
+                            onChange={(e) => updateCurrentInvoice({ note: e.target.value })}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* 2. Payment Section */}
+            <Card className="shadow-sm border flex-1 flex flex-col">
+                <CardContent className="p-4 space-y-4 flex-1 flex flex-col">
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-emerald-800">Thanh toán</h3>
+                        <Badge variant="outline" className="text-orange-500 border-orange-200 bg-orange-50 font-normal">Chưa thanh toán</Badge>
+                    </div>
+
+                    <div className="bg-emerald-50/50 p-3 rounded border border-emerald-100 flex justify-between items-center">
+                        <span className="text-sm font-medium text-emerald-800">Tổng hóa đơn:</span>
+                        <span className="text-xl font-bold text-emerald-600">{finalTotal.toLocaleString()}</span>
+                    </div>
+
+                    <div className="space-y-3">
+                        {/* Phương thức 1:*/}
+                        <div className="grid grid-cols-[100px_1fr_40px] gap-2 items-center">
+                            <span className="text-sm text-muted-foreground">Tiền khách đưa:</span>
+                            <div className="flex gap-1">
+                            <Input 
+                                className="h-8 text-right focus-visible:ring-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                value={currentInvoice.cashAmount === 0 ? '' : currentInvoice.cashAmount} 
+                                placeholder="0"
+                                type="number"
+                                min={0}
+                                onChange={(e) => updateCurrentInvoice({ cashAmount: Number(e.target.value) })}
+                            />
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7 bg-transparent"
-                            onClick={() => updateQuantity(item.id, item.type, -1)}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="w-8 text-center text-sm">{item.quantity}</span>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7 bg-transparent"
-                            onClick={() => updateQuantity(item.id, item.type, 1)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-7 w-7 text-destructive"
-                            onClick={() => removeFromCart(item.id, item.type)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                            <Select defaultValue="cash">
+                                <SelectTrigger className="w-full px-1">
+                                    <Banknote className="w-4 h-4 mx-auto text-muted-foreground"/>
+                                </SelectTrigger>
+                                <SelectContent align="end">
+                                    <SelectItem value="cash">Tiền mặt</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <X className="w-4 h-4 text-muted-foreground cursor-pointer col-start-4"/>
                         </div>
-                      </div>
-                    ))}
-                  </div>
 
-                  <Separator />
-
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tạm tính</span>
-                      <span>{subtotal.toLocaleString()}đ</span>
+                        {/* Phương thức 2 */}
+                        <div className="grid grid-cols-[100px_1fr_40px] gap-2 items-center">
+                            <span className="text-sm text-muted-foreground">Tiền khách đưa:</span>
+                            <div className="flex flex-col gap-1">
+                                <Input 
+                                    className="h-8 text-right focus-visible:ring-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" 
+                                    value={currentInvoice.transferAmount === 0 ? '' : currentInvoice.transferAmount}
+                                    placeholder="0"
+                                    type="number"
+                                    min={0}
+                                    onChange={(e) => updateCurrentInvoice({ transferAmount: Number(e.target.value) })}
+                                />
+                                <span className="text-[10px] text-emerald-600 cursor-pointer flex items-center justify-end gap-1">
+                                    <QrCode className="w-3 h-3"/> QR Code
+                                </span>
+                            </div>
+                            <Select defaultValue="acb">
+                                <SelectTrigger className="w-full px-1">
+                                     <CreditCard className="w-4 h-4 mx-auto text-muted-foreground"/>
+                                </SelectTrigger>
+                                <SelectContent align="end">
+                                    <SelectItem value="acb">ACB</SelectItem>
+                                    <SelectItem value="vcb">Vietcombank</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <X className="w-4 h-4 text-muted-foreground cursor-pointer col-start-4"/>
+                        </div>
+                        
+                        <Button variant="ghost" size="sm" className="h-6 px-0 text-xs text-muted-foreground hover:text-emerald-600">
+                            <Plus className="w-3 h-3 mr-1" /> Thêm phương thức
+                        </Button>
                     </div>
-                    {discount > 0 && (
-                      <div className="flex justify-between text-chart-2">
-                        <span>Giảm giá ({customer?.tier})</span>
-                        <span>-{discount.toLocaleString()}đ</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between font-semibold text-base">
-                      <span>Tổng cộng</span>
-                      <span>{total.toLocaleString()}đ</span>
+
+                    <Separator className="my-2"/>
+
+                    <div className="space-y-2 text-sm">
+                        <div className="flex justify-between font-medium">
+                            <span>Tổng khách đưa:</span>
+                            <span className="text-red-600">{totalPaid.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Trả lại:</span>
+                            <span className={`font-bold ${changeDue < 0 ? 'text-red-600' : 'text-slate-700'}`}>
+                                {changeDue.toLocaleString()}
+                            </span>
+                        </div>
                     </div>
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Điểm tích lũy</span>
-                      <span>+{pointsEarned} điểm</span>
+
+                    <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
+                        <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full text-xs sm:text-sm">
+                            Lưu hóa đơn
+                        </Button>
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 w-full text-xs sm:text-sm">
+                            Thanh toán
+                        </Button>
                     </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-3">
-                    <Label className="text-sm">Phương thức thanh toán</Label>
-                    <RadioGroup
-                      value={paymentMethod}
-                      onValueChange={setPaymentMethod}
-                      className="grid grid-cols-3 gap-2"
-                    >
-                      <Label
-                        htmlFor="cash"
-                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border cursor-pointer text-center ${
-                          paymentMethod === "cash" ? "border-primary bg-primary/5" : ""
-                        }`}
-                      >
-                        <RadioGroupItem value="cash" id="cash" className="sr-only" />
-                        <Banknote className="w-5 h-5" />
-                        <span className="text-xs">Tiền mặt</span>
-                      </Label>
-                      <Label
-                        htmlFor="transfer"
-                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border cursor-pointer text-center ${
-                          paymentMethod === "transfer" ? "border-primary bg-primary/5" : ""
-                        }`}
-                      >
-                        <RadioGroupItem value="transfer" id="transfer" className="sr-only" />
-                        <QrCode className="w-5 h-5" />
-                        <span className="text-xs">Chuyển khoản</span>
-                      </Label>
-                      <Label
-                        htmlFor="card"
-                        className={`flex flex-col items-center gap-1 p-3 rounded-lg border cursor-pointer text-center ${
-                          paymentMethod === "card" ? "border-primary bg-primary/5" : ""
-                        }`}
-                      >
-                        <RadioGroupItem value="card" id="card" className="sr-only" />
-                        <CreditCard className="w-5 h-5" />
-                        <span className="text-xs">Thẻ</span>
-                      </Label>
-                    </RadioGroup>
-                  </div>
-
-                  <Button className="w-full" size="lg">
-                    Thanh toán {total.toLocaleString()}đ
-                  </Button>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+            </Card>
         </div>
       </div>
     </div>
