@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { 
   Plus, 
   X, 
@@ -93,6 +94,7 @@ const inventory: InventoryItem[] = [
   }
 
   export default function POSPage() {
+    const router = useRouter()
   // --- STATE QUẢN LÝ NHIỀU HÓA ĐƠN ---
   // Mỗi phần tử trong mảng là một hóa đơn độc lập
   const [invoices, setInvoices] = useState<InvoiceState[]>([
@@ -224,24 +226,94 @@ const inventory: InventoryItem[] = [
   // --- XỬ LÝ SỰ KIỆN NÚT BẤM ---
 
   const handleSelectCustomer = () => {
-      // Giả lập chọn khách hàng từ Modal
-      updateCurrentInvoice({ 
-          customer: mockCustomer,
-          selectedPetId: mockCustomer.pets[0].id // Mặc định chọn pet đầu tiên
-      })
+      // Trong thực tế: Gửi API POST /invoices với status = 'unpaid'
+      
+      // Giả lập lưu vào localStorage để trang Invoices đọc được
+      const newInvoiceData = {
+          id: currentInvoice.id,
+          customer: currentInvoice.customer?.name || "Khách lẻ",
+          phone: currentInvoice.customer?.phone || "",
+          pet: currentInvoice.customer?.pets.find(p => p.id === currentInvoice.selectedPetId)?.name || "",
+          date: new Date().toLocaleString('en-GB'), // Format DD/MM/YYYY HH:MM
+          total: finalTotal,
+          status: "unpaid", // Quan trọng: Trạng thái chưa thanh toán
+          paymentMethod: "-",
+          items: currentInvoice.cart.map(item => ({
+              name: item.name,
+              qty: item.quantity,
+              price: item.price
+          }))
+      }
+
+      // Lấy danh sách cũ từ localStorage (nếu có)
+      const existingInvoices = JSON.parse(localStorage.getItem('mockInvoices') || '[]')
+      // Thêm hoặc cập nhật hóa đơn này
+      const updatedInvoices = [newInvoiceData, ...existingInvoices.filter((i: any) => i.id !== newInvoiceData.id)]
+      localStorage.setItem('mockInvoices', JSON.stringify(updatedInvoices))
+
+      // Thông báo và chuyển trang
+      alert(`Đã lưu hóa đơn ${currentInvoice.id} (Chưa thanh toán). Đang chuyển sang danh sách hóa đơn...`)
+      router.push("/staff/invoices")
   }
 
   const handleSaveInvoice = () => {
-      // Logic: Gửi API lưu trạng thái 'UNPAID'
-      alert(`Đã chuyển hóa đơn ${currentInvoice.id} sang "Quản lý hóa đơn" (Trạng thái: Chưa thanh toán).`)
-      // KHÔNG đóng tab
+      // 1. Tạo object dữ liệu hóa đơn để lưu
+      const newInvoiceData = {
+          id: currentInvoice.id,
+          customer: currentInvoice.customer?.name || "Khách lẻ",
+          phone: currentInvoice.customer?.phone || "",
+          pet: currentInvoice.customer?.pets.find(p => p.id === currentInvoice.selectedPetId)?.name || "",
+          date: new Date().toLocaleString('en-GB'), // Format ngày giờ hiện tại
+          total: finalTotal,
+          status: "unpaid", // QUAN TRỌNG: Đánh dấu là chưa thanh toán
+          paymentMethod: "-",
+          items: currentInvoice.cart.map(item => ({
+              name: item.name,
+              qty: item.quantity,
+              price: item.price
+          }))
+      }
+
+      // 2. Lưu vào localStorage (Giả lập Database)
+      const existingInvoices = JSON.parse(localStorage.getItem('mockInvoices') || '[]')
+      // Nếu ID đã tồn tại thì update, chưa thì thêm mới
+      const updatedInvoices = [newInvoiceData, ...existingInvoices.filter((i: any) => i.id !== newInvoiceData.id)]
+      localStorage.setItem('mockInvoices', JSON.stringify(updatedInvoices))
+
+      // 3. Thông báo & Chuyển trang
+      alert(`Đã lưu hóa đơn ${currentInvoice.id} (Chưa thanh toán). Chuyển đến danh sách hóa đơn...`)
+      // Không đóng tab POS để nhân viên có thể quay lại sửa nếu cần
+      router.push("/staff/invoices")
   }
 
   const handlePayment = () => {
-      // Logic: Gửi API lưu trạng thái 'PAID'
-      alert(`Thanh toán thành công ${currentInvoice.id}. Đã lưu vào "Quản lý hóa đơn" (Trạng thái: Đã thanh toán).`)
-      // Đóng tab hiện tại
+      const newInvoiceData = {
+          id: currentInvoice.id,
+          customer: currentInvoice.customer?.name || "Khách lẻ",
+          phone: currentInvoice.customer?.phone || "",
+          pet: currentInvoice.customer?.pets.find(p => p.id === currentInvoice.selectedPetId)?.name || "",
+          date: new Date().toLocaleString('en-GB'),
+          total: finalTotal,
+          status: "paid", // QUAN TRỌNG: Đánh dấu là đã thanh toán
+          paymentMethod: currentInvoice.transferAmount > 0 ? "Tiền mặt + CK" : "Tiền mặt",
+          items: currentInvoice.cart.map(item => ({
+              name: item.name,
+              qty: item.quantity,
+              price: item.price
+          }))
+      }
+
+      const existingInvoices = JSON.parse(localStorage.getItem('mockInvoices') || '[]')
+      const updatedInvoices = [newInvoiceData, ...existingInvoices.filter((i: any) => i.id !== newInvoiceData.id)]
+      localStorage.setItem('mockInvoices', JSON.stringify(updatedInvoices))
+
+      alert(`Thanh toán thành công ${currentInvoice.id}.`)
+      
+      // Đóng tab hiện tại vì đã xong việc
       closeInvoice(currentInvoice.id)
+      
+      // Chuyển hướng xem danh sách
+      router.push("/staff/invoices")
   }
 
   return (
@@ -595,11 +667,13 @@ const inventory: InventoryItem[] = [
                     </div>
 
                     <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
-                        <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full text-xs sm:text-sm">
-                            Lưu hóa đơn
+                        <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 w-full text-xs sm:text-sm"
+                            onClick={handleSaveInvoice}>
+                                Lưu hóa đơn
                         </Button>
-                        <Button className="bg-emerald-600 hover:bg-emerald-700 w-full text-xs sm:text-sm">
-                            Thanh toán
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 w-full text-xs sm:text-sm"
+                            onClick={handlePayment}>
+                                Thanh toán
                         </Button>
                     </div>
                 </CardContent>
