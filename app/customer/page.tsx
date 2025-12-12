@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Crown, Calendar, Bell, Plus, ArrowRight, QrCode } from "lucide-react"
+import { Crown, Calendar, Plus, ArrowRight, QrCode } from "lucide-react" 
+// Đã xóa import Bell
 
 const pets = [
   {
@@ -48,11 +49,7 @@ const appointments = [
   },
 ]
 
-const notifications = [
-  { id: 1, message: "Nhắc lịch tiêm phòng mũi 2 cho Luna vào 20/12", type: "vaccination" },
-  { id: 2, message: "Mochi cần tái khám vào 25/12", type: "checkup" },
-  { id: 3, message: "Ưu đãi 20% dịch vụ spa cuối năm!", type: "promo" },
-]
+// Đã xóa biến notifications
 
 export default function CustomerDashboard() {
   const currentSpend = 3500000
@@ -74,60 +71,40 @@ export default function CustomerDashboard() {
         </Button>
       </div>
 
-      {/* Membership Overview */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card className="md:col-span-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Crown className="w-5 h-5 text-accent" />
-              Thông tin hội viên
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Badge className="text-sm px-3 py-1">Thân thiết</Badge>
-                <span className="text-sm text-muted-foreground">Đạt cấp từ 01/06/2025</span>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold">125 điểm</p>
-                <p className="text-xs text-muted-foreground">Điểm tích lũy</p>
-              </div>
+      {/* Membership Overview - Đã sửa thành full width */}
+      {/* Đã xóa lớp grid và col-span để card tự động tràn chiều rộng */}
+      <Card className="bg-gradient-to-r from-background to-muted/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <Crown className="w-5 h-5 text-yellow-500" />
+            Thông tin hội viên
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Badge className="text-sm px-3 py-1 bg-primary text-primary-foreground hover:bg-primary/90">Thân thiết</Badge>
+              <span className="text-sm text-muted-foreground">Đạt cấp từ 01/06/2025</span>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Chi tiêu 12 tháng</span>
-                <span className="font-medium">
-                  {currentSpend.toLocaleString()}đ / {nextTierSpend.toLocaleString()}đ
-                </span>
-              </div>
-              <Progress value={progress} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                Còn {(nextTierSpend - currentSpend).toLocaleString()}đ để lên hạng VIP
-              </p>
+            <div className="text-left sm:text-right">
+              <p className="text-3xl font-bold text-primary">125 điểm</p>
+              <p className="text-xs text-muted-foreground">Điểm tích lũy</p>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Thông báo
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              {notifications.map((notif) => (
-                <li key={notif.id} className="flex items-start gap-2 text-sm">
-                  <span className="w-2 h-2 rounded-full bg-primary mt-1.5 shrink-0" />
-                  <span className="text-muted-foreground">{notif.message}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Chi tiêu 12 tháng</span>
+              <span className="font-medium">
+                {currentSpend.toLocaleString()}đ / {nextTierSpend.toLocaleString()}đ
+              </span>
+            </div>
+            <Progress value={progress} className="h-2.5" />
+            <p className="text-xs text-muted-foreground">
+              Còn {(nextTierSpend - currentSpend).toLocaleString()}đ để lên hạng VIP
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Pets */}
       <Card>
@@ -149,14 +126,14 @@ export default function CustomerDashboard() {
               <Link
                 key={pet.id}
                 href={`/customer/pets/${pet.id}`}
-                className="flex items-center gap-4 p-4 rounded-xl border hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-4 p-4 rounded-xl border hover:bg-muted/50 transition-colors group"
               >
-                <Avatar className="w-16 h-16 rounded-xl">
+                <Avatar className="w-16 h-16 rounded-xl border">
                   <AvatarImage src={pet.image || "/placeholder.svg"} />
                   <AvatarFallback>{pet.name[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{pet.name}</p>
+                  <p className="font-semibold truncate group-hover:text-primary transition-colors">{pet.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {pet.species} • {pet.breed}
                   </p>
@@ -190,7 +167,7 @@ export default function CustomerDashboard() {
             {appointments.map((apt) => (
               <div
                 key={apt.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border hover:border-primary/50 transition-colors"
               >
                 <div className="flex items-start gap-4">
                   <div className="w-14 h-14 rounded-xl bg-primary/10 flex flex-col items-center justify-center shrink-0">
@@ -211,8 +188,8 @@ export default function CustomerDashboard() {
                   <Badge variant={apt.status === "confirmed" ? "default" : "secondary"}>
                     {apt.status === "confirmed" ? "Đã xác nhận" : "Chờ xác nhận"}
                   </Badge>
-                  <Button variant="outline" size="sm" className="gap-1 bg-transparent">
-                    <QrCode className="w-4 h-4" />
+                  <Button variant="outline" size="sm" className="gap-1 bg-transparent h-8">
+                    <QrCode className="w-3.5 h-3.5" />
                     QR Code
                   </Button>
                 </div>
