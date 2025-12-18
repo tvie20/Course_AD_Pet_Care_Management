@@ -20,60 +20,31 @@ import {
 import {
   PawPrint,
   LayoutDashboard,
-  CalendarCheck,
   Stethoscope,
   Syringe,
-  ShoppingCart,
-  Users,
-  Cat,
-  Package,
-  Warehouse,
-  Receipt,
-  UserCog,
-  BarChart3,
-  Settings,
   Menu,
   Bell,
   LogOut,
   User,
   ChevronDown,
-  MessageSquare,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const sidebarGroups = [
   {
     label: "Tổng quan",
-    items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/staff" }],
+    items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/doctor" }],
   },
   {
-  label: "Nghiệp vụ",
-  items: [
-    { icon: CalendarCheck, label: "Tiếp nhận & Đặt lịch", href: "/staff/reception" },
-    { icon: ShoppingCart, label: "Bán hàng & Thanh toán", href: "/staff/pos" },
-  ],
-},
-
-  {
-    label: "Quản lý",
+    label: "Khám & tiêm",
     items: [
-      { icon: Users, label: "Khách hàng", href: "/staff/customers" },
-      { icon: Cat, label: "Thú cưng", href: "/staff/pets" },
-      { icon: Package, label: "Dịch vụ & Gói tiêm", href: "/staff/services" },
-      { icon: Receipt, label: "Hóa đơn", href: "/staff/invoices" },
-      { icon: Warehouse, label: "Kho & Nhập hàng", href: "/staff/inventory" },
-      { icon: UserCog, label: "Nhân sự", href: "/staff/hr" },
-      { icon: MessageSquare, label: "Đánh giá & Phản hồi", href: "/staff/reviews" },
-    ],
-  },
-  {
-    label: "Hệ thống",
-    items: [
-      { icon: BarChart3, label: "Báo cáo & Thống kê", href: "/staff/reports" },
-      { icon: Settings, label: "Cấu hình", href: "/staff/settings" },
+      { icon: Stethoscope, label: "Khám bệnh", href: "/doctor/examination" },
+      { icon: Syringe, label: "Tiêm phòng", href: "/doctor/vaccination" },
     ],
   },
 ]
+
+type SidebarItem = (typeof sidebarGroups)[number]["items"][number]
 
 function SidebarContent({ onItemClick }: { onItemClick?: () => void }) {
   const pathname = usePathname()
@@ -87,7 +58,7 @@ function SidebarContent({ onItemClick }: { onItemClick?: () => void }) {
           </div>
           <div>
             <span className="text-lg font-bold text-foreground">PetCareX</span>
-            <p className="text-xs text-muted-foreground">Backoffice</p>
+            <p className="text-xs text-muted-foreground">Khu vực bác sĩ</p>
           </div>
         </Link>
       </div>
@@ -98,7 +69,7 @@ function SidebarContent({ onItemClick }: { onItemClick?: () => void }) {
               {group.label}
             </p>
             <div className="space-y-1">
-              {group.items.map((item) => {
+              {group.items.map((item: SidebarItem) => {
                 const isActive = pathname === item.href
                 return (
                   <Link
@@ -125,7 +96,7 @@ function SidebarContent({ onItemClick }: { onItemClick?: () => void }) {
   )
 }
 
-export default function StaffLayout({ children }: { children: React.ReactNode }) {
+export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -151,7 +122,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
               </SheetContent>
             </Sheet>
             <div className="hidden sm:block">
-              <Badge variant="outline">Chi nhánh: PetCareX Quận 1</Badge>
+              <Badge variant="outline">Chế độ: Bác sĩ</Badge>
             </div>
           </div>
 
@@ -172,19 +143,20 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                     <span className="text-sm font-medium">BS. Nguyễn Văn A</span>
                     <span className="text-xs text-muted-foreground">Bác sĩ thú y</span>
                   </div>
-                  <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
+                  <ChevronDown className="w-4 h-4 ml-1 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Tài khoản</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="w-4 h-4 mr-2" />
-                  Thông tin cá nhân
+                <DropdownMenuItem asChild>
+                  <Link href="#">
+                    <User className="w-4 h-4 mr-2" />
+                    Thông tin cá nhân
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild className="text-destructive">
-                  <Link href="/">
+                <DropdownMenuItem asChild>
+                  <Link href="/login">
                     <LogOut className="w-4 h-4 mr-2" />
                     Đăng xuất
                   </Link>

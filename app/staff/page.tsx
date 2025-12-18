@@ -162,13 +162,13 @@ export default function StaffDashboard() {
               </Link>
             </Button>
             <Button variant="outline" className="h-auto py-6 flex-col gap-2 bg-transparent" asChild>
-              <Link href="/staff/examination">
+              <Link href="/doctor/examination">
                 <Stethoscope className="w-6 h-6" />
                 <span>Bắt đầu khám</span>
               </Link>
             </Button>
             <Button variant="outline" className="h-auto py-6 flex-col gap-2 bg-transparent" asChild>
-              <Link href="/staff/vaccination">
+              <Link href="/doctor/vaccination">
                 <Syringe className="w-6 h-6" />
                 <span>Thực hiện tiêm</span>
               </Link>
