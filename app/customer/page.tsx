@@ -73,7 +73,7 @@ export default function CustomerDashboard() {
 
       {/* Membership Overview - Đã sửa thành full width */}
       {/* Đã xóa lớp grid và col-span để card tự động tràn chiều rộng */}
-      <Card className="bg-gradient-to-r from-background to-muted/20">
+      <Card className="bg-linear-to-r from-background to-muted/20">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-yellow-500" />
