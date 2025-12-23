@@ -18,20 +18,6 @@ export default function DoctorRevenuePage() {
       
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Phân bổ doanh thu bác sĩ</CardTitle></CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={doctorDetails} dataKey="doanhThu" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90}>
-                  {doctorDetails.map((entry, index) => <Cell key={index} fill={entry.color} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
           <CardHeader><CardTitle>Lượt khám theo bác sĩ</CardTitle></CardHeader>
           <CardContent className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -44,6 +30,20 @@ export default function DoctorRevenuePage() {
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Phân bổ doanh thu bác sĩ</CardTitle></CardHeader>
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={doctorDetails} dataKey="doanhThu" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={90}>
+                  {doctorDetails.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>          
         </Card>
 
         <Card className="md:col-span-2">
