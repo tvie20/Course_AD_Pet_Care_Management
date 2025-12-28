@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, ArrowRight, Check, Stethoscope, Syringe, QrCode } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, Stethoscope, Syringe, QrCode, Clock } from "lucide-react"
 
 const steps = ["Chi nhánh & Dịch vụ", "Thú cưng", "Thời gian", "Xác nhận"]
 
@@ -23,24 +23,16 @@ const pets = [
 ]
 
 const timeSlots = [
-  "08:00",
-  "08:30",
-  "09:00",
-  "09:30",
-  "10:00",
-  "10:30",
-  "14:00",
-  "14:30",
-  "15:00",
-  "15:30",
-  "16:00",
-  "16:30",
-]
-
-const doctors = [
-  { id: "any", name: "Không yêu cầu cụ thể" },
-  { id: "1", name: "BS. Nguyễn Văn A" },
-  { id: "2", name: "BS. Trần Thị B" },
+  "08:00 - 08:30",
+  "08:30 - 09:00",
+  "09:00 - 09:30",
+  "09:30 - 10:00",
+  "10:00 - 10:30",
+  "14:00 - 14:30",
+  "14:30 - 15:00",
+  "15:00 - 15:30",
+  "15:30 - 16:00",
+  "16:00 - 16:30",
 ]
 
 export default function NewAppointmentPage() {
@@ -52,14 +44,13 @@ export default function NewAppointmentPage() {
     pet: "",
     date: "",
     time: "",
-    doctor: "any",
   })
   const [success, setSuccess] = useState(false)
 
   const canProceed = () => {
     switch (step) {
       case 0:
-        return form.branch && form.service
+        return form.branch && form.service && (form.service !== 'vaccine' || form.vaccineType)
       case 1:
         return form.pet
       case 2:
@@ -98,19 +89,19 @@ export default function NewAppointmentPage() {
             <div className="text-left bg-card rounded-xl p-4 border mb-6 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Dịch vụ:</span>
-                <span className="font-medium">Khám bệnh</span>
+                <span className="font-medium">{form.service === "exam" ? "Khám bệnh" : "Tiêm phòng"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Thú cưng:</span>
-                <span className="font-medium">Mochi</span>
+                <span className="font-medium">{pets.find(p => p.id === form.pet)?.name}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Chi nhánh:</span>
-                <span className="font-medium">PetCareX Quận 1</span>
+                <span className="font-medium">{branches.find(b => b.id === form.branch)?.name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Ngày giờ:</span>
-                <span className="font-medium">15/12/2025 - 09:00</span>
+                <span className="text-muted-foreground">Thời gian:</span>
+                <span className="font-medium italic">{form.date} | {form.time}</span>
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -128,7 +119,7 @@ export default function NewAppointmentPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto pb-10">
       <div className="mb-6">
         <Button variant="ghost" asChild className="gap-2 mb-4">
           <Link href="/customer">
@@ -141,21 +132,21 @@ export default function NewAppointmentPage() {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 px-2">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                 i <= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               }`}
             >
               {i < step ? <Check className="w-4 h-4" /> : i + 1}
             </div>
-            <span className={`hidden sm:block ml-2 text-sm ${i <= step ? "text-foreground" : "text-muted-foreground"}`}>
+            <span className={`hidden sm:block ml-2 text-sm ${i <= step ? "text-foreground font-medium" : "text-muted-foreground"}`}>
               {s}
             </span>
             {i < steps.length - 1 && (
-              <div className={`w-8 sm:w-16 h-0.5 mx-2 ${i < step ? "bg-primary" : "bg-muted"}`} />
+              <div className={`w-6 sm:w-12 h-0.5 mx-2 ${i < step ? "bg-primary" : "bg-muted"}`} />
             )}
           </div>
         ))}
@@ -167,15 +158,15 @@ export default function NewAppointmentPage() {
           {step === 0 && (
             <div className="space-y-6">
               <div className="space-y-3">
-                <Label>Chọn chi nhánh</Label>
+                <Label className="text-base">Chọn chi nhánh</Label>
                 <Select value={form.branch} onValueChange={(v) => setForm({ ...form, branch: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn chi nhánh" />
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Chọn chi nhánh gần bạn" />
                   </SelectTrigger>
                   <SelectContent>
                     {branches.map((b) => (
                       <SelectItem key={b.id} value={b.id}>
-                        <div>
+                        <div className="py-1">
                           <p className="font-medium">{b.name}</p>
                           <p className="text-xs text-muted-foreground">{b.address}</p>
                         </div>
@@ -186,37 +177,37 @@ export default function NewAppointmentPage() {
               </div>
 
               <div className="space-y-3">
-                <Label>Loại dịch vụ</Label>
+                <Label className="text-base">Loại dịch vụ</Label>
                 <RadioGroup
                   value={form.service}
-                  onValueChange={(v) => setForm({ ...form, service: v })}
+                  onValueChange={(v) => setForm({ ...form, service: v, vaccineType: "" })}
                   className="grid grid-cols-2 gap-4"
                 >
                   <Label
                     htmlFor="exam"
-                    className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                      form.service === "exam" ? "border-primary bg-primary/5" : "hover:bg-muted"
+                    className={`flex flex-col items-center gap-3 p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                      form.service === "exam" ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50 border-muted"
                     }`}
                   >
                     <RadioGroupItem value="exam" id="exam" className="sr-only" />
-                    <Stethoscope className="w-8 h-8 text-primary" />
-                    <span className="font-medium">Khám bệnh</span>
+                    <Stethoscope className={`w-8 h-8 ${form.service === "exam" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className="font-semibold">Khám bệnh</span>
                   </Label>
                   <Label
                     htmlFor="vaccine"
-                    className={`flex flex-col items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                      form.service === "vaccine" ? "border-primary bg-primary/5" : "hover:bg-muted"
+                    className={`flex flex-col items-center gap-3 p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                      form.service === "vaccine" ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50 border-muted"
                     }`}
                   >
                     <RadioGroupItem value="vaccine" id="vaccine" className="sr-only" />
-                    <Syringe className="w-8 h-8 text-primary" />
-                    <span className="font-medium">Tiêm phòng</span>
+                    <Syringe className={`w-8 h-8 ${form.service === "vaccine" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className="font-semibold">Tiêm phòng</span>
                   </Label>
                 </RadioGroup>
               </div>
 
               {form.service === "vaccine" && (
-                <div className="space-y-3">
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
                   <Label>Hình thức tiêm</Label>
                   <RadioGroup
                     value={form.vaccineType}
@@ -225,21 +216,21 @@ export default function NewAppointmentPage() {
                   >
                     <Label
                       htmlFor="single"
-                      className={`flex-1 p-3 rounded-lg border cursor-pointer text-center ${
-                        form.vaccineType === "single" ? "border-primary bg-primary/5" : ""
+                      className={`flex-1 p-3 rounded-lg border cursor-pointer text-center transition-colors ${
+                        form.vaccineType === "single" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                       }`}
                     >
                       <RadioGroupItem value="single" id="single" className="sr-only" />
-                      <span>Tiêm lẻ</span>
+                      <span className="text-sm font-medium">Tiêm lẻ</span>
                     </Label>
                     <Label
                       htmlFor="package"
-                      className={`flex-1 p-3 rounded-lg border cursor-pointer text-center ${
-                        form.vaccineType === "package" ? "border-primary bg-primary/5" : ""
+                      className={`flex-1 p-3 rounded-lg border cursor-pointer text-center transition-colors ${
+                        form.vaccineType === "package" ? "border-primary bg-primary/5" : "hover:bg-muted/50"
                       }`}
                     >
                       <RadioGroupItem value="package" id="package" className="sr-only" />
-                      <span>Theo gói</span>
+                      <span className="text-sm font-medium">Theo gói</span>
                     </Label>
                   </RadioGroup>
                 </div>
@@ -250,31 +241,32 @@ export default function NewAppointmentPage() {
           {/* Step 2: Pet Selection */}
           {step === 1 && (
             <div className="space-y-4">
-              <Label>Chọn thú cưng</Label>
+              <Label className="text-base">Chọn thú cưng</Label>
               <RadioGroup value={form.pet} onValueChange={(v) => setForm({ ...form, pet: v })} className="space-y-3">
                 {pets.map((pet) => (
                   <Label
                     key={pet.id}
                     htmlFor={`pet-${pet.id}`}
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-colors ${
-                      form.pet === pet.id ? "border-primary bg-primary/5" : "hover:bg-muted"
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      form.pet === pet.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/50 border-muted"
                     }`}
                   >
                     <RadioGroupItem value={pet.id} id={`pet-${pet.id}`} className="sr-only" />
-                    <Avatar className="w-14 h-14 rounded-xl">
-                      <AvatarImage src={pet.image || "/placeholder.svg"} />
+                    <Avatar className="w-14 h-14 rounded-xl border">
+                      <AvatarImage src={pet.image || "/placeholder.svg"} className="object-cover" />
                       <AvatarFallback>{pet.name[0]}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-semibold">{pet.name}</p>
+                    <div className="flex-1">
+                      <p className="font-bold text-lg">{pet.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {pet.species} • {pet.breed}
                       </p>
                     </div>
+                    {form.pet === pet.id && <Check className="w-5 h-5 text-primary" />}
                   </Label>
                 ))}
               </RadioGroup>
-              <Button variant="outline" className="w-full mt-4 bg-transparent" asChild>
+              <Button variant="outline" className="w-full mt-4 border-dashed py-6" asChild>
                 <Link href="/customer/pets/new">+ Thêm thú cưng mới</Link>
               </Button>
             </div>
@@ -284,21 +276,27 @@ export default function NewAppointmentPage() {
           {step === 2 && (
             <div className="space-y-6">
               <div className="space-y-3">
-                <Label>Chọn ngày</Label>
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  className="w-full p-3 rounded-lg border bg-background"
-                  min={new Date().toISOString().split("T")[0]}
-                />
+                <Label className="text-base">Chọn ngày khám</Label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={form.date}
+                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    className="w-full p-3 rounded-lg border bg-background focus:ring-2 focus:ring-primary outline-none transition-all"
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
               </div>
 
               <div className="space-y-3">
-                <Label>Chọn khung giờ</Label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <Label className="text-base">Chọn khung giờ</Label>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {timeSlots.map((slot) => {
-                    const isAvailable = Math.random() > 0.3
+                    // Logic giả định khung giờ trống
+                    const isAvailable = true 
                     return (
                       <Button
                         key={slot}
@@ -306,73 +304,69 @@ export default function NewAppointmentPage() {
                         variant={form.time === slot ? "default" : "outline"}
                         disabled={!isAvailable}
                         onClick={() => setForm({ ...form, time: slot })}
-                        className="text-sm"
+                        className={`text-sm py-6 transition-all ${form.time === slot ? "scale-105 shadow-md" : ""}`}
                       >
                         {slot}
                       </Button>
                     )
                   })}
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                <Label>Bác sĩ (tuỳ chọn)</Label>
-                <Select value={form.doctor} onValueChange={(v) => setForm({ ...form, doctor: v })}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {doctors.map((d) => (
-                      <SelectItem key={d.id} value={d.id}>
-                        {d.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <p className="text-xs text-muted-foreground mt-2 italic">* Vui lòng đến sớm 5-10 phút để làm thủ tục check-in.</p>
               </div>
             </div>
           )}
 
           {/* Step 4: Confirmation */}
           {step === 3 && (
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Xác nhận thông tin</h3>
-              <div className="bg-muted rounded-xl p-4 space-y-3">
-                <div className="flex justify-between">
+            <div className="space-y-6">
+              <h3 className="font-bold text-xl text-center">Kiểm tra lại thông tin</h3>
+              <div className="bg-muted/50 rounded-2xl p-6 space-y-4 border">
+                <div className="flex justify-between items-center py-1 border-b border-muted">
                   <span className="text-muted-foreground">Chi nhánh:</span>
-                  <span className="font-medium">{branches.find((b) => b.id === form.branch)?.name}</span>
+                  <span className="font-semibold text-right">{branches.find((b) => b.id === form.branch)?.name}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center py-1 border-b border-muted">
                   <span className="text-muted-foreground">Dịch vụ:</span>
-                  <span className="font-medium">{form.service === "exam" ? "Khám bệnh" : "Tiêm phòng"}</span>
+                  <div className="flex items-center gap-2">
+                    {form.service === "exam" ? <Stethoscope className="w-4 h-4 text-primary" /> : <Syringe className="w-4 h-4 text-primary" />}
+                    <span className="font-semibold">{form.service === "exam" ? "Khám bệnh" : "Tiêm phòng"}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center py-1 border-b border-muted">
                   <span className="text-muted-foreground">Thú cưng:</span>
-                  <span className="font-medium">{pets.find((p) => p.id === form.pet)?.name}</span>
+                  <span className="font-semibold">{pets.find((p) => p.id === form.pet)?.name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Ngày:</span>
-                  <span className="font-medium">{form.date}</span>
+                <div className="flex justify-between items-center py-1 border-b border-muted">
+                  <span className="text-muted-foreground">Ngày đặt hẹn:</span>
+                  <span className="font-semibold">{form.date}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Giờ:</span>
-                  <span className="font-medium">{form.time}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Bác sĩ:</span>
-                  <span className="font-medium">{doctors.find((d) => d.id === form.doctor)?.name}</span>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-muted-foreground">Khung giờ:</span>
+                  <span className="font-bold text-primary">{form.time}</span>
                 </div>
               </div>
+              <p className="text-xs text-center text-muted-foreground">
+                Bằng việc xác nhận, bạn đồng ý với các quy định về đặt lịch của PetCareX.
+              </p>
             </div>
           )}
 
           {/* Navigation */}
           <div className="flex justify-between mt-8 pt-6 border-t">
-            <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 0} className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setStep(step - 1)} 
+              disabled={step === 0} 
+              className="gap-2 px-6"
+            >
               <ArrowLeft className="w-4 h-4" />
               Quay lại
             </Button>
-            <Button onClick={handleNext} disabled={!canProceed()} className="gap-2">
+            <Button 
+              onClick={handleNext} 
+              disabled={!canProceed()} 
+              className={`gap-2 px-8 transition-all ${step === steps.length - 1 ? "bg-green-600 hover:bg-green-700 text-white" : ""}`}
+            >
               {step === steps.length - 1 ? "Xác nhận đặt lịch" : "Tiếp tục"}
               {step < steps.length - 1 && <ArrowRight className="w-4 h-4" />}
             </Button>
