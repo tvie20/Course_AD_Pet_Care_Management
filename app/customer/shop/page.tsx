@@ -93,7 +93,7 @@ export default function ShopPage() {
               </div>
               <CardContent className="p-4 flex-1">
                   <div className="text-xs text-muted-foreground mb-1">{product.category}</div>
-                  <h3 className="font-medium line-clamp-2 min-h-[40px] mb-2 group-hover:text-emerald-600 transition-colors">{product.name}</h3>
+                  <h3 className="font-medium line-clamp-2 min-h-10 mb-2 group-hover:text-emerald-600 transition-colors">{product.name}</h3>
                   <div className="flex items-center gap-1 mb-2">
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /><span className="text-xs font-medium">{product.rating}</span><span className="text-xs text-muted-foreground">({product.sold} đã bán)</span>
                   </div>
