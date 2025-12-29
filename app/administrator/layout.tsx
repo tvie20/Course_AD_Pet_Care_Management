@@ -53,16 +53,16 @@ const sidebarGroups = [
   {
     label: "Quản lý nguồn lực",
     items: [
-      { icon: Building2, label: "Cơ sở & Chi nhánh", href: "/administrator/branches" },
-      { icon: UserCog, label: "Nhân sự & Lương", href: "/administrator/hr" },
-      { icon: Users, label: "Phân hạng hội viên", href: "/administrator/customers" },
+      { icon: Building2, label: "Cơ sở & Chi nhánh", href: "/administrator/resources/branches" },
+      { icon: UserCog, label: "Nhân sự & Lương", href: "/administrator/resources/hr" },
+      { icon: Users, label: "Phân hạng hội viên", href: "/administrator/resources/rankcustomers" },
     ],
   },
   {
     label: "Thiết lập",
     items: [
-      { icon: Settings, label: "Cấu hình hệ thống", href: "/administrator/settings" },
-      { icon: History, label: "Nhật ký hoạt động", href: "/administrator/logs" },
+      { icon: Settings, label: "Cấu hình hệ thống", href: "/administrator/setting/system" },
+      { icon: History, label: "Nhật ký hoạt động", href: "/administrator/setting/logs" },
     ],
   },
 ]

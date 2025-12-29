@@ -127,7 +127,7 @@ export default function BranchRevenuePage() {
                   className="pl-8 w-[130px] h-9 border-none bg-transparent shadow-none focus-visible:ring-0 text-sm"
                 />
               </div>
-              <div className="h-6 w-[1px] bg-slate-300"></div>
+              <div className="h-6 w-px bg-slate-300"></div>
               <div className="relative group">
                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Đến</span>
                 <Input 

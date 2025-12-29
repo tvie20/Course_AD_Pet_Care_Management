@@ -37,7 +37,7 @@ export default function ProductRevenuePage() {
       `${p.id},${p.name},${p.category},${p.price},${p.sold},${p.revenue}`
     ).join("\n")
     
-    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(["\uFEFF" + headers + rows], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.setAttribute("href", url)
