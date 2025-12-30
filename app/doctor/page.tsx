@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,7 +13,7 @@ import {
   AlertTriangle, 
   ArrowRight, 
   User,
-  MoreHorizontal
+  RefreshCcw // Icon làm mới
 } from "lucide-react"
 
 // --- DỮ LIỆU MẪU (MOCK DATA) ---
@@ -33,7 +34,7 @@ const examQueue = [
     pet: "Mochi",
     type: "Chó Poodle",
     reason: "Khám lại viêm da",
-    status: "waiting", // Đang chờ
+    status: "waiting", 
   },
   {
     id: 2,
@@ -42,7 +43,7 @@ const examQueue = [
     pet: "Miu",
     type: "Mèo Anh lông ngắn",
     reason: "Bỏ ăn, nôn mửa",
-    status: "in-progress", // Đang khám
+    status: "in-progress", 
   },
   {
     id: 3,
@@ -51,7 +52,7 @@ const examQueue = [
     pet: "Lu",
     type: "Chó Corgi",
     reason: "Kiểm tra tai",
-    status: "booked", // Đã đặt (chưa đến)
+    status: "booked", 
   },
 ]
 
@@ -84,6 +85,13 @@ const notes = [
 ]
 
 export default function DoctorDashboardPage() {
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  // Hàm làm mới trang (Giống F5)
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    window.location.reload()
+  }
   
   // Hàm helper để render badge trạng thái
   const renderStatusBadge = (status: string) => {
@@ -109,12 +117,18 @@ export default function DoctorDashboardPage() {
             Xin chào, BS. Nguyễn Văn A. Chúc bạn một ngày làm việc hiệu quả!
           </p>
         </div>
+        
+        {/* Nút Làm mới dữ liệu (Icon xoay) */}
         <div className="flex gap-2">
-          <Button variant="outline" className="hidden sm:flex">
-             Báo cáo ngày
-          </Button>
-          <Button className="bg-emerald-600 hover:bg-emerald-700">
-             Làm mới dữ liệu
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title="Làm mới dữ liệu (F5)"
+            className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+          >
+             <RefreshCcw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
           </Button>
         </div>
       </div>
