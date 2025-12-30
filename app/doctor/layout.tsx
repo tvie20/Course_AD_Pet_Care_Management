@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
+// 1. Thêm import useEffect
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -30,6 +31,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+// ... (Giữ nguyên phần const sidebarGroups và SidebarContent)
 const sidebarGroups = [
   {
     label: "Tổng quan",
@@ -98,6 +100,19 @@ function SidebarContent({ onItemClick }: { onItemClick?: () => void }) {
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // 2. Thêm state để kiểm tra đã mount chưa
+  const [isMounted, setIsMounted] = useState(false)
+
+  // 3. Sử dụng useEffect để set mounted = true sau khi render lần đầu ở client
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  // 4. Nếu chưa mount, không render gì cả (hoặc render khung xương loading) để tránh lỗi Hydration
+  if (!isMounted) {
+    return null
+  }
 
   return (
     <div className="min-h-screen flex bg-muted/30">

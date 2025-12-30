@@ -233,7 +233,7 @@ export default function ReceptionPage() {
                           {config.actionLabel && (
                             <Button 
                                 size="sm" 
-                                className={`h-8 min-w-[80px] shadow-sm text-xs font-medium ${config.actionClass}`}
+                                className={`h-8 min-w-20 shadow-sm text-xs font-medium ${config.actionClass}`}
                                 onClick={() => handleStatusChange(apt.id, config.nextStatus)}
                             >
                                 {config.actionLabel}
