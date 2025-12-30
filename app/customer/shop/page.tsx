@@ -5,16 +5,15 @@ import Link from "next/link"
 import { Search, ShoppingCart, Star, Plus, PackageSearch, X, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { useCart } from "@/components/cart-provider"
 
-// ... (Giữ nguyên danh sách products)
+// 1. Đã xóa trường originalPrice và discount trong data
 const products = [
-  { id: 1, name: "Hạt Royal Canin cho Poodle", category: "Thức ăn", price: 185000, originalPrice: 203500, rating: 4.8, sold: 120, discount: "-10%", image: "/images/royal-canin.png" },
+  { id: 1, name: "Hạt Royal Canin cho Poodle", category: "Thức ăn", price: 185000, rating: 4.8, sold: 120, image: "/images/royal-canin.png" },
   { id: 2, name: "Cát vệ sinh Ciao Nhật Bản", category: "Phụ kiện", price: 65000, rating: 5, sold: 850, image: "/images/cat-litter.png" },
   { id: 3, name: "Gel dinh dưỡng Virbac Nutri-plus", category: "Thuốc & TPCN", price: 210000, rating: 4.9, sold: 200, image: "/images/gel-virbac.png" },
-  { id: 4, name: "Súp thưởng Ciao Churu (Gói 4 thanh)", category: "Thức ăn", price: 22000, originalPrice: 23100, rating: 5, sold: 2100, discount: "-5%", image: "/images/ciao-churu.png" },
+  { id: 4, name: "Súp thưởng Ciao Churu (Gói 4 thanh)", category: "Thức ăn", price: 22000, rating: 5, sold: 2100, image: "/images/ciao-churu.png" },
 ]
 
 export default function ShopPage() {
@@ -34,15 +33,13 @@ export default function ShopPage() {
     setSelectedProduct(null)
   }
 
-  // --- GỌI 1 LẦN DUY NHẤT Ở ĐÂY ---
   const handleConfirmAddToCart = () => {
     if (selectedProduct) {
-      addToCart(selectedProduct, quantity) // Đã hoạt động mượt mà!
+      addToCart(selectedProduct, quantity)
       handleCloseModal()
     }
   }
 
-  // ... (Phần logic lọc sản phẩm giữ nguyên)
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesCategory = activeTab === "Tất cả" || product.category === activeTab
@@ -87,8 +84,8 @@ export default function ShopPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
             <Card key={product.id} className="overflow-hidden flex flex-col group border-none shadow-sm hover:shadow-md transition-all">
+              {/* 2. Đã xóa Badge giảm giá ở đây */}
               <div className="relative aspect-square bg-muted/20 p-4 flex items-center justify-center">
-                {product.discount && (<Badge className="absolute top-2 right-2 bg-red-500 hover:bg-red-600">{product.discount}</Badge>)}
                 <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center text-muted-foreground text-xs text-center p-2">{product.name} Image</div>
               </div>
               <CardContent className="p-4 flex-1">
@@ -97,9 +94,9 @@ export default function ShopPage() {
                   <div className="flex items-center gap-1 mb-2">
                       <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" /><span className="text-xs font-medium">{product.rating}</span><span className="text-xs text-muted-foreground">({product.sold} đã bán)</span>
                   </div>
+                  {/* 3. Đã xóa phần hiển thị giá cũ gạch ngang */}
                   <div className="flex items-end gap-2">
                       <span className="font-bold text-lg">{product.price.toLocaleString()}đ</span>
-                      {product.originalPrice && (<span className="text-sm text-muted-foreground line-through mb-1">{product.originalPrice.toLocaleString()}đ</span>)}
                   </div>
               </CardContent>
               <CardFooter className="p-4 pt-0">
@@ -123,15 +120,19 @@ export default function ShopPage() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onClick={handleCloseModal}></div>
           <Card className="relative w-full max-w-sm bg-background border-none shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <Button variant="ghost" size="icon" className="absolute right-2 top-2 z-10 bg-white/50 hover:bg-white rounded-full shadow-sm" onClick={handleCloseModal}><X className="w-4 h-4 text-black" /></Button>
+            {/* 4. Đã xóa Badge giảm giá trong Modal */}
             <div className="relative aspect-square bg-muted/20 p-4 flex items-center justify-center">
-                {selectedProduct.discount && (<Badge className="absolute top-2 right-12 bg-red-500 hover:bg-red-600 z-10">{selectedProduct.discount}</Badge>)}
                 <div className="w-full h-full bg-gray-200 rounded-md flex items-center justify-center text-muted-foreground text-xs text-center p-2">{selectedProduct.name} Image</div>
             </div>
             <div className="p-4">
                 <div className="text-xs text-muted-foreground mb-1">{selectedProduct.category}</div>
                 <h3 className="font-medium text-lg mb-2 text-emerald-700">{selectedProduct.name}</h3>
                 <div className="flex items-center gap-1 mb-2"><Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /><span className="text-sm font-medium">{selectedProduct.rating}</span><span className="text-sm text-muted-foreground">({selectedProduct.sold} đã bán)</span></div>
-                <div className="flex items-end gap-2 mb-6"><span className="font-bold text-2xl">{selectedProduct.price.toLocaleString()}đ</span>{selectedProduct.originalPrice && (<span className="text-base text-muted-foreground line-through mb-1">{selectedProduct.originalPrice.toLocaleString()}đ</span>)}</div>
+                
+                {/* 5. Đã xóa giá cũ gạch ngang trong Modal */}
+                <div className="flex items-end gap-2 mb-6">
+                    <span className="font-bold text-2xl">{selectedProduct.price.toLocaleString()}đ</span>
+                </div>
                 
                 <div className="flex items-center justify-between mb-4 p-3 bg-muted/30 rounded-lg border border-dashed">
                     <span className="text-sm font-medium">Số lượng:</span>

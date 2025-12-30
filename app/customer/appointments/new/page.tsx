@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -46,6 +46,13 @@ export default function NewAppointmentPage() {
     time: "",
   })
   const [success, setSuccess] = useState(false)
+  
+  // State để lấy giờ hiện tại
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
 
   const canProceed = () => {
     switch (step) {
@@ -66,6 +73,35 @@ export default function NewAppointmentPage() {
     } else {
       setSuccess(true)
     }
+  }
+
+  // --- LOGIC KIỂM TRA GIỜ ĐÃ QUA ĐỂ DISABLE ---
+  const isSlotDisabled = (slot: string) => {
+    if (!form.date || !now) return false; // Chưa chọn ngày hoặc chưa load xong -> Enable
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
+    // 1. Nếu chọn ngày tương lai -> Không disable
+    if (form.date > todayStr) return false;
+    
+    // 2. Nếu chọn ngày quá khứ -> Disable hết (input date đã chặn nhưng check thêm cho chắc)
+    if (form.date < todayStr) return true;
+
+    // 3. Nếu là HÔM NAY -> So sánh giờ
+    const [startTime] = slot.split(" - ");
+    const [slotHour, slotMinute] = startTime.split(":").map(Number);
+    
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    const slotTimeValue = slotHour * 60 + slotMinute;
+    const currentTimeValue = currentHour * 60 + currentMinute;
+
+    // Disable nếu giờ slot <= giờ hiện tại
+    return slotTimeValue <= currentTimeValue;
   }
 
   if (success) {
@@ -281,7 +317,7 @@ export default function NewAppointmentPage() {
                   <input
                     type="date"
                     value={form.date}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
+                    onChange={(e) => setForm({ ...form, date: e.target.value, time: "" })}
                     className="w-full p-3 rounded-lg border bg-background focus:ring-2 focus:ring-primary outline-none transition-all"
                     min={new Date().toISOString().split("T")[0]}
                   />
@@ -295,16 +331,22 @@ export default function NewAppointmentPage() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {timeSlots.map((slot) => {
-                    // Logic giả định khung giờ trống
-                    const isAvailable = true 
+                    const isDisabled = isSlotDisabled(slot);
+                    
                     return (
                       <Button
                         key={slot}
                         type="button"
+                        // Nếu đang chọn slot này, dùng default, nếu bị disable dùng ghost/outline xám
                         variant={form.time === slot ? "default" : "outline"}
-                        disabled={!isAvailable}
+                        disabled={isDisabled}
                         onClick={() => setForm({ ...form, time: slot })}
-                        className={`text-sm py-6 transition-all ${form.time === slot ? "scale-105 shadow-md" : ""}`}
+                        // Thêm style cho trạng thái disabled: mờ đi và nền xám
+                        className={`text-sm py-6 transition-all ${
+                          form.time === slot ? "scale-105 shadow-md" : ""
+                        } ${
+                          isDisabled ? "opacity-50 bg-muted text-muted-foreground hover:bg-muted cursor-not-allowed" : ""
+                        }`}
                       >
                         {slot}
                       </Button>
