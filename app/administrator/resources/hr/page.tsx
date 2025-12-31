@@ -28,13 +28,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 type Role = "Quản lý" | "Bác sĩ" | "Tiếp tân" | "Sales"
 type Status = "Active" | "Leave" | "Resigned"
 
-// Mô phỏng bảng SQL: LichSuCongTac (MaNV, MaCN, NgayVaoLam, NgayChuyenCT, ChucVu, LuongCoBan)
 interface WorkHistory {
-  branch: string      // MaCN
-  role: Role          // ChucVu
-  startDate: string   // NgayVaoLam
-  endDate: string | null // NgayChuyenCT (null = đang làm)
-  baseSalary: number  // LuongCoBan (lúc đó)
+  branch: string      
+  role: Role          
+  startDate: string   
+  endDate: string | null 
+  baseSalary: number  
 }
 
 interface Employee {
@@ -43,7 +42,7 @@ interface Employee {
   role: Role
   branch: string
   phone: string
-  joinDate: string // Ngày vào làm (tổng thể)
+  joinDate: string 
   status: Status
   salary: {
     base: number
@@ -51,7 +50,7 @@ interface Employee {
     bonus: number
     deduction: number
   }
-  workHistory: WorkHistory[] // Danh sách lịch sử điều động
+  workHistory: WorkHistory[] 
 }
 
 // --- MOCK DATA ---
@@ -64,7 +63,6 @@ const generateEmployees = (): Employee[] => {
 
   const employees: Employee[] = []
   
-  // Tạo dữ liệu mẫu
   BRANCHES.forEach((branch, bIdx) => {
     employees.push(createEmp(bIdx, 0, "Quản lý", branch, firstNames, lastNames))
     for(let i=0; i<2; i++) employees.push(createEmp(bIdx, i+1, "Bác sĩ", branch, firstNames, lastNames))
@@ -88,10 +86,9 @@ const createEmp = (bIdx: number, idx: number, role: Role, branch: string, f: str
     salary: {
       base: baseSalary,
       allowance: role === "Bác sĩ" ? 2000000 : 1000000,
-      bonus: 2123606, // Số lẻ cho giống thật
+      bonus: 2123606, 
       deduction: 1000000
     },
-    // Khởi tạo lịch sử công tác ban đầu
     workHistory: [
         {
             branch: branch,
@@ -114,12 +111,9 @@ export default function HRAndPayrollPage() {
   // States cho Modal
   const [isPayslipOpen, setIsPayslipOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false) // True = Sửa, False = Thêm mới
+  const [isEditMode, setIsEditMode] = useState(false) 
   
-  // Selected Employee cho Payslip
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null)
-
-  // Form Data state
   const [formData, setFormData] = useState<Employee | null>(null)
 
   // --- FILTER ---
@@ -131,12 +125,13 @@ export default function HRAndPayrollPage() {
     })
   }, [employees, searchTerm, branchFilter])
 
-  const totalPayroll = filteredData.reduce((sum, emp) => sum + (emp.salary.base + emp.salary.allowance + emp.salary.bonus - emp.salary.deduction), 0)
-  const avgSalary = totalPayroll / (filteredData.length || 1)
+  // Chỉ tính lương cho nhân viên đang hoạt động
+  const activeEmployees = filteredData.filter(e => e.status === 'Active')
+  const totalPayroll = activeEmployees.reduce((sum, emp) => sum + (emp.salary.base + emp.salary.allowance + emp.salary.bonus - emp.salary.deduction), 0)
+  const avgSalary = totalPayroll / (activeEmployees.length || 1)
 
   // --- HANDLERS ---
 
-  // 1. Mở form Thêm mới
   const handleOpenAdd = () => {
     setIsEditMode(false)
     const newId = `NV${(employees.length + 1).toString().padStart(3, '0')}`
@@ -150,44 +145,54 @@ export default function HRAndPayrollPage() {
         joinDate: today,
         status: "Active",
         salary: { base: 15000000, allowance: 0, bonus: 0, deduction: 0 },
-        workHistory: [] // Sẽ được tạo khi save
+        workHistory: [] 
     })
     setIsEditOpen(true)
   }
 
-  // 2. Mở form Sửa (Điều động)
   const handleOpenEdit = (emp: Employee) => {
     setIsEditMode(true)
-    // Clone object để tránh mutate state trực tiếp
     setFormData(JSON.parse(JSON.stringify(emp))) 
     setIsEditOpen(true)
   }
 
-  // 3. Lưu (Thêm mới hoặc Cập nhật Điều động)
+  // === HÀM XỬ LÝ NGHỈ VIỆC ===
+  const handleResign = (empId: string) => {
+    if(confirm("Bạn có chắc chắn muốn xác nhận nhân viên này nghỉ việc? Hành động này sẽ cập nhật trạng thái và đóng lịch sử công tác.")) {
+        setEmployees(employees.map(e => {
+            if(e.id === empId) {
+                const today = new Date().toISOString().split('T')[0]
+                return {
+                    ...e,
+                    status: "Resigned", // Đổi trạng thái
+                    workHistory: e.workHistory.map(h => 
+                        // Đóng work history hiện tại (endDate = today)
+                        h.endDate === null ? { ...h, endDate: today } : h
+                    )
+                }
+            }
+            return e
+        }))
+    }
+  }
+
   const handleSaveEmployee = () => {
     if (!formData) return;
 
     if (isEditMode) {
-        // --- LOGIC ĐIỀU ĐỘNG (TRANSFER LOGIC) ---
         const originalEmp = employees.find(e => e.id === formData.id)
         if (originalEmp) {
-            // Kiểm tra xem có thay đổi Chi nhánh hoặc Chức vụ không
             const isTransfer = (originalEmp.branch !== formData.branch) || (originalEmp.role !== formData.role)
-            
             let updatedHistory = [...formData.workHistory]
             
             if (isTransfer) {
                 const today = new Date().toISOString().split('T')[0]
-                
-                // 1. Kết thúc công tác cũ (Cập nhật NgayChuyenCT cho record đang active)
                 updatedHistory = updatedHistory.map(h => {
                     if (h.endDate === null) {
                         return { ...h, endDate: today }
                     }
                     return h
                 })
-
-                // 2. Thêm công tác mới (Điều động)
                 updatedHistory.push({
                     branch: formData.branch,
                     role: formData.role,
@@ -196,7 +201,6 @@ export default function HRAndPayrollPage() {
                     baseSalary: formData.salary.base
                 })
             } else {
-                // Nếu không điều động, chỉ cập nhật lương/thông tin cho record hiện tại
                 updatedHistory = updatedHistory.map(h => {
                     if (h.endDate === null) {
                         return { ...h, baseSalary: formData.salary.base }
@@ -209,9 +213,7 @@ export default function HRAndPayrollPage() {
             setEmployees(employees.map(e => e.id === formData.id ? updatedEmp : e))
         }
     } else {
-        // --- LOGIC THÊM MỚI ---
         const newEmp = { ...formData }
-        // Tạo history record đầu tiên
         newEmp.workHistory = [{
             branch: newEmp.branch,
             role: newEmp.role,
@@ -224,7 +226,6 @@ export default function HRAndPayrollPage() {
     setIsEditOpen(false)
   }
 
-  // Helper cho PDF/Excel
   const handleExportExcel = () => { alert("Đang xuất file Excel...") }
   const handlePrintPayslip = () => { window.print() }
 
@@ -253,10 +254,10 @@ export default function HRAndPayrollPage() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tổng nhân sự</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Nhân sự hoạt động</CardTitle>
             <UserCheck className="h-4 w-4 text-indigo-600" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{filteredData.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">{activeEmployees.length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -319,7 +320,7 @@ export default function HRAndPayrollPage() {
                             <TableRow key={emp.id}>
                                 <TableCell>
                                     <div className="flex flex-col pl-10">
-                                        <div className="font-medium text-slate-900">{emp.name}</div>
+                                        <div className={`font-medium ${emp.status === 'Resigned' ? 'text-slate-400 line-through' : 'text-slate-900'}`}>{emp.name}</div>
                                         <div className="text-xs text-muted-foreground">{emp.id} • {emp.phone}</div>
                                     </div>
                                 </TableCell>
@@ -332,8 +333,15 @@ export default function HRAndPayrollPage() {
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${emp.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                        {emp.status === 'Active' ? 'Đang làm việc' : 'Đã nghỉ'}
+                                    {/* HIỂN THỊ TRẠNG THÁI */}
+                                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                        emp.status === 'Active' 
+                                            ? 'bg-green-50 text-green-700' 
+                                            : emp.status === 'Resigned' 
+                                                ? 'bg-red-50 text-red-700' 
+                                                : 'bg-yellow-50 text-yellow-700'
+                                    }`}>
+                                        {emp.status === 'Active' ? 'Đang làm việc' : emp.status === 'Resigned' ? 'Đã nghỉ việc' : 'Nghỉ phép'}
                                     </span>
                                 </TableCell>
                                 <TableCell className="text-right font-medium text-slate-600">{formatCurrency(emp.salary.base)}</TableCell>
@@ -350,13 +358,22 @@ export default function HRAndPayrollPage() {
                                             <DropdownMenuItem onClick={() => { setSelectedEmployee(emp); setIsPayslipOpen(true); }}>
                                                 <FileText className="mr-2 h-4 w-4" /> Xem phiếu lương
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleOpenEdit(emp)}>
-                                                <UserCheck className="mr-2 h-4 w-4" /> Sửa hồ sơ & Điều động
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="text-red-600">
-                                                <UserX className="mr-2 h-4 w-4" /> Cho nghỉ việc
-                                            </DropdownMenuItem>
+                                            
+                                            {/* Chỉ cho phép sửa nếu chưa nghỉ việc */}
+                                            {emp.status === 'Active' && (
+                                                <>
+                                                    <DropdownMenuItem onClick={() => handleOpenEdit(emp)}>
+                                                        <UserCheck className="mr-2 h-4 w-4" /> Sửa hồ sơ & Điều động
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem 
+                                                        className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                                                        onClick={() => handleResign(emp.id)}
+                                                    >
+                                                        <UserX className="mr-2 h-4 w-4" /> Cho nghỉ việc
+                                                    </DropdownMenuItem>
+                                                </>
+                                            )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -496,7 +513,7 @@ export default function HRAndPayrollPage() {
         </DialogContent>
       </Dialog>
 
-      {/* MODAL PHIẾU LƯƠNG (GIỮ NGUYÊN GIAO DIỆN CŨ) */}
+      {/* MODAL PHIẾU LƯƠNG */}
       <Dialog open={isPayslipOpen} onOpenChange={setIsPayslipOpen}>
         <DialogContent className="sm:max-w-[600px] print:max-w-full print:shadow-none print:border-none">
           {selectedEmployee && (
@@ -513,7 +530,9 @@ export default function HRAndPayrollPage() {
                             <p className="text-xs text-slate-400 mt-1">{selectedEmployee.branch}</p>
                         </div>
                         <div className="text-right">
-                            <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200">Chính thức</Badge>
+                            <Badge className={`border ${selectedEmployee.status === 'Resigned' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-indigo-100 text-indigo-700 border-indigo-200'}`}>
+                                {selectedEmployee.status === 'Resigned' ? 'Đã nghỉ việc' : 'Chính thức'}
+                            </Badge>
                             <p className="text-xs text-slate-400 mt-2">Ngày công: 26/26</p> 
                         </div>
                     </div>
