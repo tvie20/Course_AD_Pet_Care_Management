@@ -160,8 +160,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Hệ thống</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem><User className="mr-2 h-4 w-4" /> Tài khoản cá nhân</DropdownMenuItem>
-                <DropdownMenuItem><LogOut className="mr-2 h-4 w-4 text-destructive" /> Đăng xuất</DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href="/"> 
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Đăng xuất
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

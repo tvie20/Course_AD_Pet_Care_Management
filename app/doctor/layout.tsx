@@ -164,14 +164,14 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Tài khoản</DropdownMenuLabel>
                 <DropdownMenuItem asChild>
-                  <Link href="#">
+                  <Link href="/doctor/profile">
                     <User className="w-4 h-4 mr-2" />
                     Thông tin cá nhân
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/login">
+                  <Link href="/">
                     <LogOut className="w-4 h-4 mr-2" />
                     Đăng xuất
                   </Link>

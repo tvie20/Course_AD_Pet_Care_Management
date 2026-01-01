@@ -33,7 +33,6 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// 1. IMPORT CART PROVIDER TẠI ĐÂY
 // Đảm bảo đường dẫn đúng với nơi bạn lưu file cart-provider.tsx
 import { CartProvider } from "@/components/cart-provider"
 
@@ -44,7 +43,6 @@ const sidebarItems = [
   { icon: Calendar, label: "Đặt lịch hẹn", href: "/customer/appointments" },
   { icon: History, label: "Lịch sử khám & tiêm", href: "/customer/history" },
   { icon: Receipt, label: "Lịch sử mua hàng", href: "/customer/invoices" },
-  { icon: Syringe, label: "Gói tiêm & nhắc lịch", href: "/customer/vaccinations" },
   { icon: Star, label: "Đánh giá dịch vụ", href: "/customer/reviews" },
 ]
 

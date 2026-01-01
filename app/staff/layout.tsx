@@ -57,20 +57,10 @@ const sidebarGroups = [
   {
     label: "Quản lý",
     items: [
-      { icon: Users, label: "Khách hàng", href: "/staff/customers" },
       { icon: Cat, label: "Thú cưng", href: "/staff/pets" },
-      { icon: Package, label: "Dịch vụ & Gói tiêm", href: "/staff/services" },
       { icon: Receipt, label: "Hóa đơn", href: "/staff/invoices" },
       { icon: Warehouse, label: "Kho & Nhập hàng", href: "/staff/inventory" },
-      { icon: UserCog, label: "Nhân sự", href: "/staff/hr" },
       { icon: MessageSquare, label: "Đánh giá & Phản hồi", href: "/staff/reviews" },
-    ],
-  },
-  {
-    label: "Hệ thống",
-    items: [
-      { icon: BarChart3, label: "Báo cáo & Thống kê", href: "/staff/reports" },
-      { icon: Settings, label: "Cấu hình", href: "/staff/settings" },
     ],
   },
 ]
@@ -169,8 +159,8 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                     <AvatarFallback>BS</AvatarFallback>
                   </Avatar>
                   <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-medium">BS. Nguyễn Văn A</span>
-                    <span className="text-xs text-muted-foreground">Bác sĩ thú y</span>
+                    <span className="text-sm font-medium">NV. Nguyễn Văn A</span>
+                    <span className="text-xs text-muted-foreground">Nhân viên</span>
                   </div>
                   <ChevronDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
                 </Button>
@@ -178,9 +168,11 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Tài khoản</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="w-4 h-4 mr-2" />
-                  Thông tin cá nhân
+                <DropdownMenuItem asChild>
+                  <Link href="/staff/profile">
+                    <User className="w-4 h-4 mr-2" />
+                    Thông tin cá nhân
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild className="text-destructive">
