@@ -37,10 +37,13 @@ import {
   Stethoscope,
   MoreHorizontal, 
   Trash2,
-  Eye
+  Eye,
+  User,
+  History,
+  PlusCircle
 } from "lucide-react"
 
-// Cấu hình Visual (Giữ nguyên màu sắc)
+// --- CẤU HÌNH VISUAL ---
 const statusConfig: any = {
   booked: { 
     label: "Đã đặt", 
@@ -110,8 +113,36 @@ export default function ReceptionPage() {
   const [appointments, setAppointments] = useState(initialAppointments)
   const [search, setSearch] = useState("")
   const [serviceFilter, setServiceFilter] = useState("all")
-  const [walkInOpen, setWalkInOpen] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null)
+  
+  // --- STATE CHO FORM TIẾP NHẬN ---
+  const [walkInOpen, setWalkInOpen] = useState(false)
+  const [customerType, setCustomerType] = useState<"new" | "old">("new") // Loại khách: Mới / Cũ
+  
+  // Form Data tổng hợp
+  const [formData, setFormData] = useState({
+    // 1. Service Info (Đã bỏ MaNV)
+    LoaiDichVu: "",
+    // 2. Customer Info
+    HoTenKH: "",
+    SDT: "",
+    CCCD: "",
+    GioiTinhKH: "",
+    NgaySinhKH: "",
+    EmailKH: "",
+    // 3. Pet Info
+    TenTC: "",
+    LoaiTC: "",
+    GiongTC: "",
+    GioiTinhTC: "",
+    NgaySinhTC: "",
+  })
+
+  // State xử lý riêng cho Khách cũ
+  const [checkCCCD, setCheckCCCD] = useState("")
+  const [foundCustomer, setFoundCustomer] = useState<any>(null) // Lưu thông tin khách tìm thấy
+  const [existingPets, setExistingPets] = useState<any[]>([]) // List thú cưng của khách cũ
+  const [selectedPetId, setSelectedPetId] = useState<string>("new_pet") // ID thú cưng được chọn (hoặc 'new_pet')
 
   const handleStatusChange = (id: number, nextStatus: string) => {
     setAppointments(prev => prev.map(apt => apt.id === id ? { ...apt, status: nextStatus } : apt))
@@ -121,6 +152,44 @@ export default function ReceptionPage() {
     if(confirm("Xác nhận hủy lịch hẹn này?")) {
       handleStatusChange(id, "cancelled")
     }
+  }
+
+  // Giả lập check CCCD (Backend sẽ xử lý sau)
+  const handleCheckCCCD = () => {
+    // Demo: Nhập 079090000001 sẽ tìm thấy
+    if (checkCCCD === "079090000001") {
+        setFoundCustomer({
+            HoTenKH: "Nguyễn Văn A",
+            SDT: "0901234567",
+            EmailKH: "nguyenvana@gmail.com"
+        })
+        setExistingPets([
+            { id: "p1", TenTC: "Mochi", LoaiTC: "Chó", GiongTC: "Poodle" },
+            { id: "p2", TenTC: "Lu", LoaiTC: "Mèo", GiongTC: "Mướp" }
+        ])
+        setSelectedPetId("p1") // Mặc định chọn bé đầu tiên
+    } else {
+        alert("Không tìm thấy khách hàng với CCCD này!")
+        setFoundCustomer(null)
+        setExistingPets([])
+    }
+  }
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleCreateTicket = () => {
+    // Logic tạo phiếu (gọi API)
+    console.log("Dữ liệu gửi đi:", {
+        type: customerType,
+        customer: customerType === 'old' ? foundCustomer : { ...formData }, // Lấy formData phần khách hàng
+        pet: customerType === 'old' && selectedPetId !== 'new_pet' ? selectedPetId : { ...formData }, // Lấy formData phần thú cưng
+        service: { LoaiDichVu: formData.LoaiDichVu } // Chỉ còn Loại Dịch Vụ
+    })
+    alert("Đã tạo phiếu tiếp nhận thành công!")
+    setWalkInOpen(false)
+    // Reset form...
   }
 
   const filteredAppointments = appointments.filter((apt) => {
@@ -137,6 +206,7 @@ export default function ReceptionPage() {
           <p className="text-muted-foreground">Quản lý lịch hẹn và tiếp nhận khách hàng</p>
         </div>
         
+        {/* --- DIALOG TIẾP NHẬN KHÁCH VÃNG LAI --- */}
         <Dialog open={walkInOpen} onOpenChange={setWalkInOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 bg-emerald-600 hover:bg-emerald-700 h-9 text-sm">
@@ -144,19 +214,201 @@ export default function ReceptionPage() {
               Tiếp nhận khách vãng lai
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Tiếp nhận khách vãng lai</DialogTitle>
-              <DialogDescription>Tạo phiếu tiếp nhận cho khách không đặt lịch trước</DialogDescription>
+              <DialogDescription>Nhập thông tin để tạo phiếu khám ngay lập tức.</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-               <div className="space-y-2"><Label>SĐT Khách</Label><Input placeholder="09..." /></div>
-               <Button className="w-full" onClick={() => setWalkInOpen(false)}>Tạo phiếu</Button>
+
+            <div className="space-y-6 py-2">
+                
+                {/* 1. CHỌN LOẠI KHÁCH HÀNG */}
+                <div className="flex p-1 bg-slate-100 rounded-lg">
+                    <button 
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${customerType === 'new' ? 'bg-white shadow text-emerald-700' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setCustomerType("new")}
+                    >
+                        <UserPlus className="w-4 h-4 inline-block mr-2" />
+                        Khách hàng mới
+                    </button>
+                    <button 
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${customerType === 'old' ? 'bg-white shadow text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}
+                        onClick={() => setCustomerType("old")}
+                    >
+                        <History className="w-4 h-4 inline-block mr-2" />
+                        Khách hàng cũ
+                    </button>
+                </div>
+
+                {/* 2. THÔNG TIN DỊCH VỤ (ĐÃ BỎ CHỌN BÁC SĨ) */}
+                <div className="p-4 border rounded-lg bg-slate-50/50">
+                    <div className="space-y-2">
+                        <Label>Loại dịch vụ <span className="text-red-500">*</span></Label>
+                        <Select onValueChange={(val) => handleInputChange("LoaiDichVu", val)}>
+                            <SelectTrigger><SelectValue placeholder="Chọn dịch vụ" /></SelectTrigger>
+                            <SelectContent>
+                                {/* Chỉ còn 2 loại dịch vụ này */}
+                                <SelectItem value="Khám bệnh">Khám bệnh</SelectItem>
+                                <SelectItem value="Tiêm phòng">Tiêm phòng</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                {/* 3. LOGIC KHÁCH HÀNG */}
+                {customerType === 'new' ? (
+                    // --- FORM KHÁCH MỚI ---
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                            <User className="w-4 h-4 text-emerald-600" />
+                            <h3 className="font-semibold text-sm">Thông tin khách hàng</h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Họ tên <span className="text-red-500">*</span></Label>
+                                <Input placeholder="Nguyễn Văn A" onChange={(e) => handleInputChange("HoTenKH", e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>SĐT <span className="text-red-500">*</span></Label>
+                                <Input placeholder="09..." onChange={(e) => handleInputChange("SDT", e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>CCCD/CMND</Label>
+                                <Input placeholder="12 số..." onChange={(e) => handleInputChange("CCCD", e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Email</Label>
+                                <Input placeholder="example@mail.com" onChange={(e) => handleInputChange("EmailKH", e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Giới tính</Label>
+                                <Select onValueChange={(val) => handleInputChange("GioiTinhKH", val)}>
+                                    <SelectTrigger><SelectValue placeholder="Chọn giới tính" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Nam">Nam</SelectItem>
+                                        <SelectItem value="Nữ">Nữ</SelectItem>
+                                        <SelectItem value="Khác">Khác</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Ngày sinh</Label>
+                                <Input type="date" onChange={(e) => handleInputChange("NgaySinhKH", e.target.value)} />
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    // --- FORM KHÁCH CŨ (CHECK CCCD) ---
+                    <div className="space-y-4">
+                        <div className="flex items-end gap-3">
+                            <div className="space-y-2 flex-1">
+                                <Label>Nhập CCCD khách hàng</Label>
+                                <Input 
+                                    placeholder="Nhập CCCD để tìm kiếm..." 
+                                    value={checkCCCD}
+                                    onChange={(e) => setCheckCCCD(e.target.value)}
+                                />
+                            </div>
+                            <Button onClick={handleCheckCCCD} className="bg-blue-600 hover:bg-blue-700">
+                                <Search className="w-4 h-4 mr-2" /> Kiểm tra
+                            </Button>
+                        </div>
+
+                        {foundCustomer && (
+                            <div className="p-3 bg-blue-50 border border-blue-100 rounded-md text-sm space-y-1">
+                                <p><strong>Khách hàng:</strong> {foundCustomer.HoTenKH}</p>
+                                <p><strong>SĐT:</strong> {foundCustomer.SDT}</p>
+                                <p className="text-muted-foreground text-xs">Email: {foundCustomer.EmailKH}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* 4. LOGIC THÚ CƯNG */}
+                {(customerType === 'new' || foundCustomer) && (
+                    <div className="space-y-4 pt-2">
+                        <div className="flex items-center gap-2 pb-2 border-b">
+                            <div className="bg-emerald-100 p-1 rounded-full"><PlusCircle className="w-4 h-4 text-emerald-600" /></div>
+                            <h3 className="font-semibold text-sm">Thông tin thú cưng</h3>
+                        </div>
+
+                        {/* Nếu là khách cũ -> Cho chọn thú cưng có sẵn */}
+                        {customerType === 'old' && existingPets.length > 0 && (
+                            <div className="space-y-2 mb-4">
+                                <Label>Chọn thú cưng cần khám</Label>
+                                <Select value={selectedPetId} onValueChange={setSelectedPetId}>
+                                    <SelectTrigger className="bg-white border-blue-200">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {existingPets.map(pet => (
+                                            <SelectItem key={pet.id} value={pet.id}>
+                                                {pet.TenTC} ({pet.LoaiTC} - {pet.GiongTC})
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="new_pet" className="font-semibold text-emerald-600">
+                                            + Thêm thú cưng mới
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {/* Form nhập thú cưng (Hiện khi là Khách mới HOẶC Khách cũ chọn "Thêm mới") */}
+                        {(customerType === 'new' || selectedPetId === 'new_pet') && (
+                            <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg border border-dashed border-slate-300">
+                                <div className="col-span-2 text-xs font-semibold text-slate-500 uppercase">Nhập thông tin thú cưng mới</div>
+                                <div className="space-y-2">
+                                    <Label>Tên thú cưng <span className="text-red-500">*</span></Label>
+                                    <Input placeholder="Vd: Mochi" onChange={(e) => handleInputChange("TenTC", e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Loài</Label>
+                                    <Select onValueChange={(val) => handleInputChange("LoaiTC", val)}>
+                                        <SelectTrigger><SelectValue placeholder="Chó/Mèo..." /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Chó">Chó</SelectItem>
+                                            <SelectItem value="Mèo">Mèo</SelectItem>
+                                            <SelectItem value="Khác">Khác</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Giống (Breed)</Label>
+                                    <Input placeholder="Vd: Poodle, Mướp..." onChange={(e) => handleInputChange("GiongTC", e.target.value)} />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Giới tính</Label>
+                                    <Select onValueChange={(val) => handleInputChange("GioiTinhTC", val)}>
+                                        <SelectTrigger><SelectValue placeholder="Đực/Cái" /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Đực">Đực</SelectItem>
+                                            <SelectItem value="Cái">Cái</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Ngày sinh (ước lượng)</Label>
+                                    <Input type="date" onChange={(e) => handleInputChange("NgaySinhTC", e.target.value)} />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
             </div>
+
+            <DialogFooter className="mt-4">
+                <Button variant="outline" onClick={() => setWalkInOpen(false)}>Hủy bỏ</Button>
+                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={handleCreateTicket}>
+                    Tạo phiếu tiếp nhận
+                </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* --- CÁC PHẦN DƯỚI GIỮ NGUYÊN (BẢNG DANH SÁCH & DIALOG CHI TIẾT) --- */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -229,7 +481,6 @@ export default function ReceptionPage() {
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-2">
                           
-                          {/* NÚT THAO TÁC CHÍNH (Đã thu nhỏ: h-8, text-xs) */}
                           {config.actionLabel && (
                             <Button 
                                 size="sm" 
@@ -240,7 +491,6 @@ export default function ReceptionPage() {
                             </Button>
                           )}
 
-                          {/* MENU 3 CHẤM (Đã thu nhỏ: h-8 w-8) */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-slate-900">
