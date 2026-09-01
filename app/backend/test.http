@@ -1,0 +1,18 @@
+### Cấu hình biến môi trường
+@hostname = localhost
+@port = 3055
+@host = {{hostname}}:{{port}}
+@baseUrl = http://{{host}}/api
+
+# 1. TOKEN: Copy accessToken thật của bạn sau khi đăng nhập paste vào đây
+@accessToken = 7bc5879d67dd80f126dffe0195b00439a7f86daf72b80b2c5fcf0a657e55ea66
+
+# 2. CLIENT ID: Mã khách hàng (Khớp với mã trong SQL Script vừa chạy)
+@clientId = KH00000001
+
+# ==================================================================
+
+GET {{baseUrl}}/reviews
+Content-Type: application/json
+authorization: {{accessToken}}
+x-client-id: {{clientId}}

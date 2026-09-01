@@ -1,0 +1,221 @@
+"use client"
+
+import type React from "react"
+
+// 1. Import Hooks
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation" // Thêm useRouter
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  PawPrint,
+  LayoutDashboard,
+  Stethoscope,
+  Syringe,
+  Menu,
+  LogOut,
+  User,
+  ChevronDown,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+
+const sidebarGroups = [
+  {
+    label: "Tổng quan",
+    items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/doctor" }],
+  },
+  {
+    label: "Khám & tiêm",
+    items: [
+      { icon: Stethoscope, label: "Khám bệnh", href: "/doctor/examination" },
+      { icon: Syringe, label: "Tiêm phòng", href: "/doctor/vaccination" },
+    ],
+  },
+]
+
+type SidebarItem = (typeof sidebarGroups)[number]["items"][number]
+
+function SidebarContent({ onItemClick }: { onItemClick?: () => void }) {
+  const pathname = usePathname()
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b">
+        <Link href="/" className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary">
+            <PawPrint className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div>
+            <span className="text-lg font-bold text-foreground">PetCareX</span>
+            <p className="text-xs text-muted-foreground">Khu vực bác sĩ</p>
+          </div>
+        </Link>
+      </div>
+      <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+        {sidebarGroups.map((group) => (
+          <div key={group.label}>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">
+              {group.label}
+            </p>
+            <div className="space-y-1">
+              {group.items.map((item: SidebarItem) => {
+                const isActive = pathname === item.href
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onItemClick}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {item.label}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+    </div>
+  )
+}
+
+export default function DoctorLayout({ children }: { children: React.ReactNode }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // --- LOGIC XỬ LÝ DỮ LIỆU BÁC SĨ ---
+  const router = useRouter()
+  const [isMounted, setIsMounted] = useState(false)
+  const [staff, setStaff] = useState<{ HoTenNV: string; LoaiNV: string } | null>(null)
+
+  useEffect(() => {
+    setIsMounted(true)
+    
+    // Lấy dữ liệu từ localStorage
+    const userStr = localStorage.getItem("staffUser")
+    if (userStr) {
+      try {
+        setStaff(JSON.parse(userStr))
+      } catch (e) {
+        console.error("Lỗi parse data nhân viên", e)
+      }
+    }
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem("staffAccessToken")
+    localStorage.removeItem("staffUser")
+    router.push("/staff/login") 
+  }
+
+  // Helper hiển thị chức vụ
+  const getRoleName = (code: string) => {
+    switch (code) {
+      case 'B': return "Bác sĩ thú y";
+      case 'Q': return "Quản lý";
+      case 'T': return "Tiếp tân";
+      default: return "Nhân viên y tế";
+    }
+  }
+
+  // Dữ liệu hiển thị
+  const displayName = staff?.HoTenNV || "Bác sĩ"
+  const displayRole = staff?.LoaiNV ? getRoleName(staff.LoaiNV) : "..."
+  const initial = displayName.charAt(0).toUpperCase()
+  // -----------------------------------
+
+  if (!isMounted) {
+    return null
+  }
+
+  return (
+    <div className="min-h-screen flex bg-muted/30">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 bg-card border-r">
+        <SidebarContent />
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 lg:pl-64">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-40 h-16 bg-card border-b flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-4">
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-0">
+                <SidebarContent onItemClick={() => setSidebarOpen(false)} />
+              </SheetContent>
+            </Sheet>
+            <div className="hidden sm:block">
+              <Badge variant="outline">Chế độ: Bác sĩ</Badge>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2 pl-2">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src="/doctor-avatar.png" />
+                    {/* Hiển thị ký tự đầu của tên bác sĩ */}
+                    <AvatarFallback>{initial}</AvatarFallback>
+                  </Avatar>
+                  <div className="hidden sm:flex flex-col items-start">
+                    {/* Hiển thị tên bác sĩ thật */}
+                    <span className="text-sm font-medium">{displayName}</span>
+                    {/* Hiển thị chức vụ (Bác sĩ thú y) */}
+                    <span className="text-xs text-muted-foreground">Bác sĩ thú y</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 ml-1 text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Tài khoản</DropdownMenuLabel>
+                <DropdownMenuItem asChild>
+                  <Link href="/doctor/profile">
+                    <User className="w-4 h-4 mr-2" />
+                    Thông tin cá nhân
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* Nút đăng xuất có xử lý logic */}
+                <DropdownMenuItem 
+                    asChild 
+                    className="text-destructive cursor-pointer"
+                >
+                  <Link href="#" onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Đăng xuất
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-4 lg:p-6">{children}</main>
+      </div>
+    </div>
+  )
+}
